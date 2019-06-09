@@ -9,9 +9,9 @@
 
 #### 安装教程
 
-gopath模式: `go get https://gitee.com/goflyfox/gtoken`
+gopath模式: `go get https://github.comgoflyfox/gtoken`
 
-或者 使用go.mod添加 :`require gitee.com/goflyfox/gtoken last`
+或者 使用go.mod添加 :`require github.com/goflyfox/gtoken last`
 
 #### 使用说明
 
