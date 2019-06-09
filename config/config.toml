@@ -1,0 +1,11 @@
+log-path = "./logs"
+http-port = 80
+
+# title设置
+[setting]
+    title = "token demo"
+
+# WebServer管理
+[admin]
+    user = "admin"
+    pass = "123"
