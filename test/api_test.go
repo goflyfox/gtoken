@@ -93,8 +93,9 @@ func TestLogin(t *testing.T) {
 	token1 := getToken(t)
 	t.Log("token:" + token1)
 	t.Log(" login second and same token ")
-	t.Log("token:" + getToken(t))
-	if token1 != getToken(t) {
+	token2 := getToken(t)
+	t.Log("token:" + token2)
+	if token1 != token2 {
 		t.Error("token not same ")
 	}
 	Username = "flyfox"

@@ -25,6 +25,7 @@ func bindRouter() {
 	loginFunc := Login
 	// 启动gtoken
 	gtoken := &gtoken.GfToken{
+		CacheMode:       g.Config().GetInt8("cache-mode"),
 		LoginPath:       "/login",
 		LoginBeforeFunc: loginFunc,
 		LogoutPath:      "/user/logout",

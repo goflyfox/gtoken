@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/g/crypto/gaes"
 	"github.com/gogf/gf/g/crypto/gmd5"
 	"github.com/gogf/gf/g/encoding/gbase64"
+	"github.com/gogf/gf/g/encoding/gjson"
 	"github.com/gogf/gf/g/net/ghttp"
 	"github.com/gogf/gf/g/os/gcache"
 	"github.com/gogf/gf/g/os/glog"
@@ -15,7 +16,14 @@ import (
 	"strings"
 )
 
+const (
+	CacheModeCache = 1
+	CacheModeRedis = 2
+)
+
 type GfToken struct {
+	// 缓存模式 1 gcache 2 gredis 默认1
+	CacheMode int8
 	// 缓存key
 	CacheKey string
 	// 超时时间 默认2小时
@@ -50,6 +58,9 @@ type GfToken struct {
 }
 
 func (m *GfToken) Init() bool {
+	if m.CacheMode == 0 {
+		m.CacheMode = CacheModeCache
+	}
 
 	if m.CacheKey == "" {
 		m.CacheKey = "GToken:"
@@ -113,12 +124,18 @@ func (m *GfToken) Init() bool {
 }
 
 func (m *GfToken) Start() bool {
-	glog.Info("[GToken][params:" + gconv.String(m) + "]start... ")
 	if !m.Init() {
 		return false
 	}
+	glog.Info("[GToken][params:" + m.String() + "]start... ")
 
 	s := g.Server()
+
+	// 缓存模式
+	if m.CacheMode > CacheModeRedis {
+		glog.Error("[GToken]CacheMode set error")
+		return false
+	}
 
 	// 认证拦截器
 	if m.AuthPaths == nil {
@@ -207,9 +224,10 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) resp.Resp {
 	if authHeader != "" {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			glog.Info("[GToken]authHeader:" + authHeader + "get token key fail")
+			glog.Warning("[GToken]authHeader:" + authHeader + " get token key fail")
 			return resp.Fail("get token key fail")
 		} else if parts[1] == "" {
+			glog.Warning("[GToken]authHeader:" + authHeader + " get token fail")
 			return resp.Fail("get token fail")
 		}
 
@@ -237,7 +255,23 @@ func (m *GfToken) genToken(userKey string, data interface{}) resp.Resp {
 		"uuid":    token.GetString("uuid"),
 		"data":    data,
 	}
-	gcache.Set(cacheKey, cacheValue, m.Timeout)
+	switch m.CacheMode {
+	case CacheModeCache:
+		gcache.Set(cacheKey, cacheValue, m.Timeout)
+	case CacheModeRedis:
+		cacheValueJson, err1 := gjson.Encode(cacheValue)
+		if err1 != nil {
+			glog.Error("[GToken]cache json encode error", err1)
+			return resp.Error("cache json encode error")
+		}
+		_, err := g.Redis().Do("SETEX", cacheKey, m.Timeout, cacheValueJson)
+		if err != nil {
+			glog.Error("[GToken]cache set error", err)
+			return resp.Error("cache set error")
+		}
+	default:
+		return resp.Fail("cache model error")
+	}
 
 	return token
 }
@@ -257,15 +291,35 @@ func (m *GfToken) validToken(token string) resp.Resp {
 	uuid := decryptToken.GetString("uuid")
 	cacheKey := m.CacheKey + userKey
 
-	userCache := gcache.Get(cacheKey)
+	var userCache g.Map
+	switch m.CacheMode {
+	case CacheModeCache:
+		userCacheValue := gcache.Get(cacheKey)
+		if userCacheValue == nil {
+			return resp.Fail("login timeout or not login")
+		}
+		userCache = gconv.Map(userCacheValue)
+	case CacheModeRedis:
+		userCacheJson, err := g.Redis().Do("GET", cacheKey)
+		if err != nil {
+			glog.Error("[GToken]cache get error", err)
+			return resp.Error("cache get error")
+		}
+		if userCacheJson == nil {
+			return resp.Fail("login timeout or not login")
+		}
 
-	if userCache == nil {
-		return resp.Fail("login timeout or not login")
+		err = gjson.DecodeTo(userCacheJson, &userCache)
+		if err != nil {
+			glog.Error("[GToken]cache get json error", err)
+			return resp.Error("cache get json error")
+		}
+	default:
+		return resp.Fail("cache model error")
 	}
 
-	cacheValue := gconv.Map(userCache)
-	if uuid != cacheValue["uuid"] {
-		glog.Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(cacheValue))
+	if uuid != userCache["uuid"] {
+		glog.Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(userCache))
 		return resp.Fail("user auth error")
 	}
 
@@ -280,11 +334,24 @@ func (m *GfToken) removeToken(token string) resp.Resp {
 	}
 
 	cacheKey := m.CacheKey + decryptToken.GetString("userKey")
-	gcache.Remove(cacheKey)
+	switch m.CacheMode {
+	case CacheModeCache:
+		gcache.Remove(cacheKey)
+	case CacheModeRedis:
+		var err error
+		_, err = g.Redis().Do("DEL", cacheKey)
+		if err != nil {
+			glog.Error("[GToken]cache remove error", err)
+			return resp.Error("cache remove error")
+		}
+	default:
+		return resp.Fail("cache model error")
+	}
 
 	return resp.Succ("")
 }
 
+// token加密方法
 func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 	if userKey == "" {
 		return resp.Fail("encrypt userKey empty")
@@ -295,6 +362,7 @@ func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 
 	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)
 	if err != nil {
+		glog.Error("[GToken]encrypt error", err)
 		return resp.Error("encrypt error")
 	}
 
@@ -305,6 +373,7 @@ func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 	})
 }
 
+// token解密方法
 func (m *GfToken) DecryptToken(token string) resp.Resp {
 	if token == "" {
 		return resp.Fail("decrypt token empty")
@@ -312,19 +381,37 @@ func (m *GfToken) DecryptToken(token string) resp.Resp {
 
 	token64, err := gbase64.Decode(token)
 	if err != nil {
+		glog.Error("[GToken]decode error", err)
 		return resp.Error("decode error")
 	}
 	decryptToken, err2 := gaes.Decrypt([]byte(token64), m.EncryptKey)
 	if err2 != nil {
+		glog.Error("[GToken]decrypt error", err2)
 		return resp.Error("decrypt error")
 	}
 	tokenArray := gstr.Split(string(decryptToken), m.TokenDelimiter)
 	if len(tokenArray) < 2 {
+		glog.Error("[GToken]token len error")
 		return resp.Error("token len error")
 	}
 
 	return resp.Succ(g.Map{
 		"userKey": tokenArray[0],
 		"uuid":    tokenArray[1],
+	})
+}
+
+// token解密方法
+func (m *GfToken) String() string {
+	return gconv.String(g.Map{
+		// 缓存模式 1 gcache 2 gredis 默认1
+		"CacheMode":      m.CacheMode,
+		"CacheKey":       m.CacheKey,
+		"Timeout":        m.Timeout,
+		"TokenDelimiter": m.TokenDelimiter,
+		"EncryptKey":     string(m.EncryptKey),
+		"LoginPath":      m.LoginPath,
+		"LogoutPath":     m.LogoutPath,
+		"AuthPaths":      gconv.String(m.AuthPaths),
 	})
 }

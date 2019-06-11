@@ -3,7 +3,7 @@
 #### 介绍
 基于gf框架的token插件，通过服务端验证方式实现token认证；
 
-1. 支持单机gcache模式
+1. 支持单机gcache和集群gredis模式
 2. 支持简单token认证
 3. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
 
@@ -11,7 +11,7 @@
 
 gopath模式: `go get https://github.comgoflyfox/gtoken`
 
-或者 使用go.mod添加 :`require github.com/goflyfox/gtoken last`
+或者 使用go.mod添加 :`require github.comgoflyfox/gtoken last`
 
 #### 使用说明
 
