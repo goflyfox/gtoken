@@ -3,7 +3,12 @@
 #### 介绍
 基于gf框架的token插件，通过服务端验证方式实现token认证；
 
-1. 支持单机gcache和集群gredis模式
+1. 支持单机gcache和集群gredis模式；
+```
+# 配置文件
+# 缓存模式 1 gcache 2 gredis
+cache-mode = 2
+```
 2. 支持简单token认证
 3. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
 
