@@ -11,9 +11,9 @@ const (
 	ERROR        = -99
 	UNAUTHORIZED = -401
 	//配置
-	TYPE_CONFIG = 1
+	TypeConfig = 1
 	//  字典
-	TYPE_DICT = 2
+	TypeDict = 2
 )
 
 type Resp struct {

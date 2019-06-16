@@ -87,14 +87,39 @@ func TestSystemUser(t *testing.T) {
 	}
 }
 
+//func TestRefresh(t *testing.T) {
+//	// 登录，访问用户信息
+//	t.Log("1. execute login and visit user")
+//	data := Post(t, "/system/user", "username="+Username)
+//	if data.Success() {
+//		t.Log(data.Json())
+//	} else {
+//		t.Error(data.Json())
+//	}
+//
+//	for i := 1; i < 9; i++ {
+//		time.Sleep(2 * time.Second)
+//		// 登录，访问用户信息
+//		t.Log("1. execute login and visit user")
+//		data = Post(t, "/system/user", "username="+Username)
+//		if data.Success() {
+//			t.Log(data.Json())
+//		} else {
+//			t.Error(data.Json())
+//		}
+//	}
+//
+//}
+
 func TestLogin(t *testing.T) {
 	Username = "testLogin"
 	t.Log(" login first ")
 	token1 := getToken(t)
 	t.Log("token:" + token1)
 	t.Log(" login second and same token ")
-	t.Log("token:" + getToken(t))
-	if token1 != getToken(t) {
+	token2 := getToken(t)
+	t.Log("token:" + token2)
+	if token1 != token2 {
 		t.Error("token not same ")
 	}
 	Username = "flyfox"

@@ -3,15 +3,28 @@
 #### 介绍
 基于gf框架的token插件，通过服务端验证方式实现token认证；
 
-1. 支持单机gcache模式
+1. 支持单机gcache和集群gredis模式；
+```
+# 配置文件
+# 缓存模式 1 gcache 2 gredis
+cache-mode = 2
+```
 2. 支持简单token认证
-3. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
+3. 加入缓存自动续期功能
+```
+// 注：通过MaxRefresh，默认当用户第五天访问时，自动再进行五天续期
+// 超时时间 默认10天
+Timeout int
+// 缓存刷新时间 默认为超时时间的一半
+MaxRefresh int
+```
+4. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
 
 #### 安装教程
 
 gopath模式: `go get https://github.comgoflyfox/gtoken`
 
-或者 使用go.mod添加 :`require github.com/goflyfox/gtoken last`
+或者 使用go.mod添加 :`require github.comgoflyfox/gtoken last`
 
 #### 使用说明
 
