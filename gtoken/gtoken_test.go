@@ -1,12 +1,12 @@
-package test
+package gtoken_test
 
 import (
 	"gtoken/gtoken"
 	"testing"
 )
 
-func TestToken(t *testing.T) {
-	t.Log(" token test ")
+func TestEncryptDecryptToken(t *testing.T) {
+	t.Log("encrypt and decrypt token test ")
 	gtoken := gtoken.GfToken{}
 	gtoken.Init()
 

@@ -20,6 +20,7 @@ const (
 	CacheModeRedis = 2
 )
 
+// GfToken gtoken结构体
 type GfToken struct {
 	// 缓存模式 1 gcache 2 gredis 默认1
 	CacheMode int8
@@ -58,6 +59,7 @@ type GfToken struct {
 	AuthAfterFunc func(r *ghttp.Request, respData resp.Resp)
 }
 
+// Init 初始化
 func (m *GfToken) Init() bool {
 	if m.CacheMode == 0 {
 		m.CacheMode = CacheModeCache
@@ -128,6 +130,7 @@ func (m *GfToken) Init() bool {
 	return true
 }
 
+// Start 启动
 func (m *GfToken) Start() bool {
 	if !m.Init() {
 		return false
@@ -168,12 +171,13 @@ func (m *GfToken) Start() bool {
 	return true
 }
 
+// Start 结束
 func (m *GfToken) Stop() bool {
 	glog.Info("[GToken]stop. ")
 	return true
 }
 
-// 通过token获取对象
+// GetTokenData 通过token获取对象
 func (m *GfToken) GetTokenData(r *ghttp.Request) resp.Resp {
 	respData := m.getRequestToken(r)
 	if respData.Success() {
@@ -184,7 +188,7 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) resp.Resp {
 	return respData
 }
 
-// 登录
+// login 登录
 func (m *GfToken) login(r *ghttp.Request) {
 	userKey, data := m.LoginBeforeFunc(r)
 	if userKey != "" {
@@ -195,7 +199,7 @@ func (m *GfToken) login(r *ghttp.Request) {
 
 }
 
-// 登出
+// logout 登出
 func (m *GfToken) logout(r *ghttp.Request) {
 	if m.LogoutBeforeFunc(r) {
 		// 获取请求token
@@ -209,7 +213,7 @@ func (m *GfToken) logout(r *ghttp.Request) {
 	}
 }
 
-// 认证拦截
+// authHook 认证拦截
 func (m *GfToken) authHook(r *ghttp.Request) {
 	if m.AuthBeforeFunc(r) {
 		// 获取请求token
@@ -223,7 +227,7 @@ func (m *GfToken) authHook(r *ghttp.Request) {
 	}
 }
 
-// 返回请求Token
+// getRequestToken 返回请求Token
 func (m *GfToken) getRequestToken(r *ghttp.Request) resp.Resp {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader != "" {
@@ -247,7 +251,7 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) resp.Resp {
 
 }
 
-// 生成Token
+// genToken 生成Token
 func (m *GfToken) genToken(userKey string, data interface{}) resp.Resp {
 	token := m.EncryptToken(userKey)
 	if !token.Success() {
@@ -271,7 +275,7 @@ func (m *GfToken) genToken(userKey string, data interface{}) resp.Resp {
 	return token
 }
 
-// 验证Token
+// validToken 验证Token
 func (m *GfToken) validToken(token string) resp.Resp {
 	if token == "" {
 		return resp.Fail("valid token empty")
@@ -311,7 +315,7 @@ func (m *GfToken) validToken(token string) resp.Resp {
 	return resp.Succ(userCache)
 }
 
-// 删除Token
+// removeToken 删除Token
 func (m *GfToken) removeToken(token string) resp.Resp {
 	decryptToken := m.DecryptToken(token)
 	if !decryptToken.Success() {
@@ -322,7 +326,7 @@ func (m *GfToken) removeToken(token string) resp.Resp {
 	return m.removeCache(cacheKey)
 }
 
-// token加密方法
+// EncryptToken token加密方法
 func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 	if userKey == "" {
 		return resp.Fail("encrypt userKey empty")
@@ -344,7 +348,7 @@ func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 	})
 }
 
-// token解密方法
+// DecryptToken token解密方法
 func (m *GfToken) DecryptToken(token string) resp.Resp {
 	if token == "" {
 		return resp.Fail("decrypt token empty")
@@ -372,7 +376,7 @@ func (m *GfToken) DecryptToken(token string) resp.Resp {
 	})
 }
 
-// token解密方法
+// String token解密方法
 func (m *GfToken) String() string {
 	return gconv.String(g.Map{
 		// 缓存模式 1 gcache 2 gredis 默认1

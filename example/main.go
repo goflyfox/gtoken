@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gogf/gf/g"
-	_ "gtoken/boot"
+	_ "gtoken/example/boot"
 )
 
 func main() {

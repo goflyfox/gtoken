@@ -9,7 +9,7 @@ import (
 	"gtoken/utils/resp"
 )
 
-// 设置缓存
+// setCache 设置缓存
 func (m *GfToken) setCache(cacheKey string, userCache g.Map) resp.Resp {
 	switch m.CacheMode {
 	case CacheModeCache:
@@ -32,7 +32,7 @@ func (m *GfToken) setCache(cacheKey string, userCache g.Map) resp.Resp {
 	return resp.Succ(userCache)
 }
 
-// 获取缓存
+// getCache 获取缓存
 func (m *GfToken) getCache(cacheKey string) resp.Resp {
 	var userCache g.Map
 	switch m.CacheMode {
@@ -64,7 +64,7 @@ func (m *GfToken) getCache(cacheKey string) resp.Resp {
 	return resp.Succ(userCache)
 }
 
-// 删除缓存
+// removeCache 删除缓存
 func (m *GfToken) removeCache(cacheKey string) resp.Resp {
 	switch m.CacheMode {
 	case CacheModeCache:
