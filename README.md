@@ -9,6 +9,7 @@
 # 缓存模式 1 gcache 2 gredis
 cache-mode = 2
 ```
+
 2. 支持简单token认证
 3. 加入缓存自动续期功能
 ```
@@ -18,13 +19,16 @@ Timeout int
 // 缓存刷新时间 默认为超时时间的一半
 MaxRefresh int
 ```
+
 4. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
+
+* github地址：https://github.com/goflyfox/gtoken
+* gitee地址：https://gitee.com/goflyfox/gtoken
 
 #### 安装教程
 
-gopath模式: `go get https://github.comgoflyfox/gtoken`
-
-或者 使用go.mod添加 :`require github.comgoflyfox/gtoken last`
+* gopath模式: `go get https://github.comgoflyfox/gtoken`
+* 或者 使用go.mod添加 :`require github.comgoflyfox/gtoken last`
 
 #### 使用说明
 
