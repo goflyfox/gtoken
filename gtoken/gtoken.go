@@ -332,7 +332,11 @@ func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 		return resp.Fail("encrypt userKey empty")
 	}
 
-	uuid := gmd5.Encrypt(grand.Str(10))
+	uuid, err := gmd5.Encrypt(grand.Str(10))
+	if err != nil {
+		glog.Error("[GToken]uuid error", err)
+		return resp.Error("uuid error")
+	}
 	tokenStr := userKey + m.TokenDelimiter + uuid
 
 	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)
@@ -344,7 +348,7 @@ func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 	return resp.Succ(g.Map{
 		"userKey": userKey,
 		"uuid":    uuid,
-		"token":   gbase64.Encode(string(token)),
+		"token":   gbase64.Encode(token),
 	})
 }
 
@@ -354,7 +358,7 @@ func (m *GfToken) DecryptToken(token string) resp.Resp {
 		return resp.Fail("decrypt token empty")
 	}
 
-	token64, err := gbase64.Decode(token)
+	token64, err := gbase64.Decode([]byte(token))
 	if err != nil {
 		glog.Error("[GToken]decode error", err)
 		return resp.Error("decode error")
