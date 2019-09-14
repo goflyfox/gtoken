@@ -2,8 +2,8 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/gogf/gf/g"
-	"github.com/gogf/gf/g/net/ghttp"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
 	"gtoken/utils/resp"
 	"testing"
 )
@@ -140,7 +140,7 @@ func TestLogout(t *testing.T) {
 func Post(t *testing.T, urlPath string, data ...interface{}) resp.Resp {
 	client := ghttp.NewClient()
 	client.SetHeader("Authorization", "Bearer "+getToken(t))
-	content := client.DoRequestContent("POST", TestURL+urlPath, data...)
+	content := client.RequestContent("POST", TestURL+urlPath, data...)
 	var respData resp.Resp
 	err := json.Unmarshal([]byte(content), &respData)
 	if err != nil {

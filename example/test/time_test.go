@@ -1,8 +1,8 @@
 package test
 
 import (
-	"github.com/gogf/gf/g/os/gtime"
-	"github.com/gogf/gf/g/util/gconv"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gconv"
 	"testing"
 	"time"
 )

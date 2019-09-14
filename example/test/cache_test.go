@@ -1,10 +1,10 @@
 package test
 
 import (
-	"github.com/gogf/gf/g"
-	"github.com/gogf/gf/g/encoding/gjson"
-	"github.com/gogf/gf/g/os/gcache"
-	"github.com/gogf/gf/g/util/gconv"
+	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/util/gconv"
 	"gtoken/gtoken"
 	"testing"
 	"time"
