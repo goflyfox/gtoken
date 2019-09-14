@@ -1,8 +1,8 @@
 package main
 
 import (
+	_ "github.com/goflyfox/gtoken/example/boot"
 	"github.com/gogf/gf/frame/g"
-	_ "gtoken/example/boot"
 )
 
 func main() {

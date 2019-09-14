@@ -1,10 +1,10 @@
 package boot
 
 import (
+	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/glog"
-	"gtoken/gtoken"
 )
 
 /*

@@ -1,7 +1,7 @@
 package gtoken_test
 
 import (
-	"gtoken/gtoken"
+	"github.com/goflyfox/gtoken/gtoken"
 	"testing"
 )
 
