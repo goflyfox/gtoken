@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"gtoken/utils/resp"
+	"gtoken/gtoken"
 	"testing"
 )
 
@@ -27,7 +27,7 @@ func TestHello(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData resp.Resp
+		var respData gtoken.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error(err)
@@ -49,7 +49,7 @@ func TestSystemUser(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData resp.Resp
+		var respData gtoken.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error(err)
@@ -137,11 +137,11 @@ func TestLogout(t *testing.T) {
 	Username = "flyfox"
 }
 
-func Post(t *testing.T, urlPath string, data ...interface{}) resp.Resp {
+func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
 	client := ghttp.NewClient()
 	client.SetHeader("Authorization", "Bearer "+getToken(t))
 	content := client.RequestContent("POST", TestURL+urlPath, data...)
-	var respData resp.Resp
+	var respData gtoken.Resp
 	err := json.Unmarshal([]byte(content), &respData)
 	if err != nil {
 		t.Error(err)
@@ -161,7 +161,7 @@ func getToken(t *testing.T) string {
 
 		content := string(r.ReadAll())
 
-		var respData resp.Resp
+		var respData gtoken.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error(err)

@@ -1,4 +1,4 @@
-package resp
+package gtoken
 
 import (
 	"encoding/json"

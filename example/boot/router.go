@@ -5,7 +5,6 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/glog"
 	"gtoken/gtoken"
-	"gtoken/utils/resp"
 )
 
 /*
@@ -16,10 +15,10 @@ func bindRouter() {
 	s := g.Server()
 	// 调试路由
 	s.BindHandler("/hello", func(r *ghttp.Request) {
-		r.Response.WriteJson(resp.Succ("hello"))
+		r.Response.WriteJson(gtoken.Succ("hello"))
 	})
 	s.BindHandler("/system/user", func(r *ghttp.Request) {
-		r.Response.WriteJson(resp.Succ("system user"))
+		r.Response.WriteJson(gtoken.Succ("system user"))
 	})
 
 	loginFunc := Login
@@ -70,7 +69,7 @@ func Login(r *ghttp.Request) (string, interface{}) {
 	passwd := r.GetPostString("passwd")
 
 	if username == "" || passwd == "" {
-		r.Response.WriteJson(resp.Fail("账号或密码错误."))
+		r.Response.WriteJson(gtoken.Fail("账号或密码错误."))
 		r.ExitAll()
 	}
 

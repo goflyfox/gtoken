@@ -11,7 +11,6 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
-	"gtoken/utils/resp"
 	"strings"
 )
 
@@ -40,7 +39,7 @@ type GfToken struct {
 	// return userKey 用户标识 如果userKey为空，结束执行
 	LoginBeforeFunc func(r *ghttp.Request) (string, interface{})
 	// 登录返回方法
-	LoginAfterFunc func(r *ghttp.Request, respData resp.Resp)
+	LoginAfterFunc func(r *ghttp.Request, respData Resp)
 
 	// 登出地址
 	LogoutPath string
@@ -48,7 +47,7 @@ type GfToken struct {
 	// return true 继续执行，否则结束执行
 	LogoutBeforeFunc func(r *ghttp.Request) bool
 	// 登出返回方法
-	LogoutAfterFunc func(r *ghttp.Request, respData resp.Resp)
+	LogoutAfterFunc func(r *ghttp.Request, respData Resp)
 
 	// 拦截地址
 	AuthPaths g.SliceStr
@@ -56,7 +55,7 @@ type GfToken struct {
 	// return true 继续执行，否则结束执行
 	AuthBeforeFunc func(r *ghttp.Request) bool
 	// 认证返回方法
-	AuthAfterFunc func(r *ghttp.Request, respData resp.Resp)
+	AuthAfterFunc func(r *ghttp.Request, respData Resp)
 }
 
 // Init 初始化
@@ -86,11 +85,11 @@ func (m *GfToken) Init() bool {
 	}
 
 	if m.LoginAfterFunc == nil {
-		m.LoginAfterFunc = func(r *ghttp.Request, respData resp.Resp) {
+		m.LoginAfterFunc = func(r *ghttp.Request, respData Resp) {
 			if !respData.Success() {
 				r.Response.WriteJson(respData)
 			} else {
-				r.Response.WriteJson(resp.Succ(g.Map{
+				r.Response.WriteJson(Succ(g.Map{
 					"token": respData.GetString("token"),
 				}))
 			}
@@ -104,9 +103,9 @@ func (m *GfToken) Init() bool {
 	}
 
 	if m.LogoutAfterFunc == nil {
-		m.LogoutAfterFunc = func(r *ghttp.Request, respData resp.Resp) {
+		m.LogoutAfterFunc = func(r *ghttp.Request, respData Resp) {
 			if respData.Success() {
-				r.Response.WriteJson(resp.Succ("logout success"))
+				r.Response.WriteJson(Succ("logout success"))
 			} else {
 				r.Response.WriteJson(respData)
 			}
@@ -119,7 +118,7 @@ func (m *GfToken) Init() bool {
 		}
 	}
 	if m.AuthAfterFunc == nil {
-		m.AuthAfterFunc = func(r *ghttp.Request, respData resp.Resp) {
+		m.AuthAfterFunc = func(r *ghttp.Request, respData Resp) {
 			if !respData.Success() {
 				r.Response.WriteJson(respData)
 				r.ExitAll()
@@ -178,7 +177,7 @@ func (m *GfToken) Stop() bool {
 }
 
 // GetTokenData 通过token获取对象
-func (m *GfToken) GetTokenData(r *ghttp.Request) resp.Resp {
+func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 	respData := m.getRequestToken(r)
 	if respData.Success() {
 		// 验证token
@@ -228,31 +227,31 @@ func (m *GfToken) authHook(r *ghttp.Request) {
 }
 
 // getRequestToken 返回请求Token
-func (m *GfToken) getRequestToken(r *ghttp.Request) resp.Resp {
+func (m *GfToken) getRequestToken(r *ghttp.Request) Resp {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader != "" {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			glog.Warning("[GToken]authHeader:" + authHeader + " get token key fail")
-			return resp.Unauthorized("get token key fail", "")
+			return Unauthorized("get token key fail", "")
 		} else if parts[1] == "" {
 			glog.Warning("[GToken]authHeader:" + authHeader + " get token fail")
-			return resp.Unauthorized("get token fail", "")
+			return Unauthorized("get token fail", "")
 		}
 
-		return resp.Succ(parts[1])
+		return Succ(parts[1])
 	}
 
 	authHeader = r.GetPostString("token")
 	if authHeader == "" {
-		return resp.Unauthorized("query token fail", "")
+		return Unauthorized("query token fail", "")
 	}
-	return resp.Succ(authHeader)
+	return Succ(authHeader)
 
 }
 
 // genToken 生成Token
-func (m *GfToken) genToken(userKey string, data interface{}) resp.Resp {
+func (m *GfToken) genToken(userKey string, data interface{}) Resp {
 	token := m.EncryptToken(userKey)
 	if !token.Success() {
 		return token
@@ -276,9 +275,9 @@ func (m *GfToken) genToken(userKey string, data interface{}) resp.Resp {
 }
 
 // validToken 验证Token
-func (m *GfToken) validToken(token string) resp.Resp {
+func (m *GfToken) validToken(token string) Resp {
 	if token == "" {
-		return resp.Unauthorized("valid token empty", "")
+		return Unauthorized("valid token empty", "")
 	}
 
 	decryptToken := m.DecryptToken(token)
@@ -298,7 +297,7 @@ func (m *GfToken) validToken(token string) resp.Resp {
 
 	if uuid != userCache["uuid"] {
 		glog.Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(userCache))
-		return resp.Unauthorized("user auth error", "")
+		return Unauthorized("user auth error", "")
 	}
 
 	nowTime := gtime.Now().Millisecond()
@@ -312,11 +311,11 @@ func (m *GfToken) validToken(token string) resp.Resp {
 		return m.setCache(cacheKey, userCache)
 	}
 
-	return resp.Succ(userCache)
+	return Succ(userCache)
 }
 
 // removeToken 删除Token
-func (m *GfToken) removeToken(token string) resp.Resp {
+func (m *GfToken) removeToken(token string) Resp {
 	decryptToken := m.DecryptToken(token)
 	if !decryptToken.Success() {
 		return decryptToken
@@ -327,25 +326,25 @@ func (m *GfToken) removeToken(token string) resp.Resp {
 }
 
 // EncryptToken token加密方法
-func (m *GfToken) EncryptToken(userKey string) resp.Resp {
+func (m *GfToken) EncryptToken(userKey string) Resp {
 	if userKey == "" {
-		return resp.Fail("encrypt userKey empty")
+		return Fail("encrypt userKey empty")
 	}
 
 	uuid, err := gmd5.Encrypt(grand.Str(10))
 	if err != nil {
 		glog.Error("[GToken]uuid error", err)
-		return resp.Error("uuid error")
+		return Error("uuid error")
 	}
 	tokenStr := userKey + m.TokenDelimiter + uuid
 
 	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)
 	if err != nil {
 		glog.Error("[GToken]encrypt error", err)
-		return resp.Error("encrypt error")
+		return Error("encrypt error")
 	}
 
-	return resp.Succ(g.Map{
+	return Succ(g.Map{
 		"userKey": userKey,
 		"uuid":    uuid,
 		"token":   gbase64.Encode(token),
@@ -353,28 +352,28 @@ func (m *GfToken) EncryptToken(userKey string) resp.Resp {
 }
 
 // DecryptToken token解密方法
-func (m *GfToken) DecryptToken(token string) resp.Resp {
+func (m *GfToken) DecryptToken(token string) Resp {
 	if token == "" {
-		return resp.Fail("decrypt token empty")
+		return Fail("decrypt token empty")
 	}
 
 	token64, err := gbase64.Decode([]byte(token))
 	if err != nil {
 		glog.Error("[GToken]decode error", err)
-		return resp.Error("decode error")
+		return Error("decode error")
 	}
 	decryptToken, err2 := gaes.Decrypt([]byte(token64), m.EncryptKey)
 	if err2 != nil {
 		glog.Error("[GToken]decrypt error", err2)
-		return resp.Error("decrypt error")
+		return Error("decrypt error")
 	}
 	tokenArray := gstr.Split(string(decryptToken), m.TokenDelimiter)
 	if len(tokenArray) < 2 {
 		glog.Error("[GToken]token len error")
-		return resp.Error("token len error")
+		return Error("token len error")
 	}
 
-	return resp.Succ(g.Map{
+	return Succ(g.Map{
 		"userKey": tokenArray[0],
 		"uuid":    tokenArray[1],
 	})
