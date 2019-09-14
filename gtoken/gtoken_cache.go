@@ -39,7 +39,7 @@ func (m *GfToken) getCache(cacheKey string) resp.Resp {
 	case CacheModeCache:
 		userCacheValue := gcache.Get(cacheKey)
 		if userCacheValue == nil {
-			return resp.Fail("login timeout or not login")
+			return resp.Unauthorized("login timeout or not login", "")
 		}
 		userCache = gconv.Map(userCacheValue)
 	case CacheModeRedis:
@@ -49,7 +49,7 @@ func (m *GfToken) getCache(cacheKey string) resp.Resp {
 			return resp.Error("cache get error")
 		}
 		if userCacheJson == nil {
-			return resp.Fail("login timeout or not login")
+			return resp.Unauthorized("login timeout or not login", "")
 		}
 
 		err = gjson.DecodeTo(userCacheJson, &userCache)

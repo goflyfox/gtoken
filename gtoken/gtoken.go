@@ -234,10 +234,10 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) resp.Resp {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			glog.Warning("[GToken]authHeader:" + authHeader + " get token key fail")
-			return resp.Fail("get token key fail")
+			return resp.Unauthorized("get token key fail", "")
 		} else if parts[1] == "" {
 			glog.Warning("[GToken]authHeader:" + authHeader + " get token fail")
-			return resp.Fail("get token fail")
+			return resp.Unauthorized("get token fail", "")
 		}
 
 		return resp.Succ(parts[1])
@@ -245,7 +245,7 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) resp.Resp {
 
 	authHeader = r.GetPostString("token")
 	if authHeader == "" {
-		return resp.Fail("query token fail")
+		return resp.Unauthorized("query token fail", "")
 	}
 	return resp.Succ(authHeader)
 
@@ -278,7 +278,7 @@ func (m *GfToken) genToken(userKey string, data interface{}) resp.Resp {
 // validToken 验证Token
 func (m *GfToken) validToken(token string) resp.Resp {
 	if token == "" {
-		return resp.Fail("valid token empty")
+		return resp.Unauthorized("valid token empty", "")
 	}
 
 	decryptToken := m.DecryptToken(token)
@@ -298,7 +298,7 @@ func (m *GfToken) validToken(token string) resp.Resp {
 
 	if uuid != userCache["uuid"] {
 		glog.Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(userCache))
-		return resp.Fail("user auth error")
+		return resp.Unauthorized("user auth error", "")
 	}
 
 	nowTime := gtime.Now().Millisecond()
