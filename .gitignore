@@ -9,5 +9,8 @@
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
+pkg
 *.out
 .idea
+logs
+vendor
