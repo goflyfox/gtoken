@@ -25,6 +25,13 @@ MaxRefresh int
 * github地址：https://github.com/goflyfox/gtoken
 * gitee地址：https://gitee.com/goflyfox/gtoken
 
+#### gtoken优势
+1. 有效的避免了jwt服务端无法退出问题；
+2. 可以解决jwt无法作废已颁布的令牌；
+3. 用户扩展信息仍存储在服务端，可有效的减少传输空间；
+4. gtoken支撑单点应用使用内存存储，也支持集群使用redis存储；
+5. 支持缓存自动续期，并且不需要客户端进行实现；
+
 #### 安装教程
 
 * gopath模式: `go get https://github.comgoflyfox/gtoken`
