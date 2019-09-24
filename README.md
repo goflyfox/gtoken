@@ -34,8 +34,8 @@ MaxRefresh int
 
 #### 安装教程
 
-* gopath模式: `go get https://github.goflyfox/gtoken`
-* 或者 使用go.mod添加 :`require github.goflyfox/gtoken latest`
+* gopath模式: `go get github.com/goflyfox/gtoken`
+* 或者 使用go.mod添加 :`require github.com/goflyfox/gtoken latest`
 
 #### 使用说明
 
