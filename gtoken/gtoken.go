@@ -127,7 +127,11 @@ func (m *GfToken) Init() bool {
 				return false
 			}
 
-			return true
+			if r.IsAjaxRequest() {
+				return true
+			}
+
+			return false
 		}
 	}
 	if m.AuthAfterFunc == nil {
