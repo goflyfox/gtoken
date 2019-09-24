@@ -38,7 +38,7 @@ func initConfig() {
 	glog.SetStdoutPrint(true)
 
 	s.SetServerRoot("./public")
-	s.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_ALLLOWER)
+	s.SetNameToUriType(ghttp.URI_TYPE_ALLLOWER)
 	s.SetLogPath(logPath)
 	s.SetErrorLogEnabled(true)
 	s.SetAccessLogEnabled(true)
@@ -69,7 +69,7 @@ func bindRouter() {
 		LoginPath:       "/login",
 		LoginBeforeFunc: loginFunc,
 		LogoutPath:      "/user/logout",
-		AuthPaths:       g.SliceStr{"/user/*", "/system/*"},
+		AuthPaths:       g.SliceStr{"/user", "/system"},
 	}
 	gtoken.Start()
 
