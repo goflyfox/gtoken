@@ -1,6 +1,7 @@
 package gtoken
 
 import (
+	"fmt"
 	"github.com/gogf/gf/crypto/gaes"
 	"github.com/gogf/gf/crypto/gmd5"
 	"github.com/gogf/gf/encoding/gbase64"
@@ -33,26 +34,25 @@ type GfToken struct {
 	TokenDelimiter string
 	// Token加密key
 	EncryptKey []byte
+	// 认证失败中文提示
+	AuthFailMsg string
 
+	// 登录路径
 	LoginPath string
-	// 登录验证方法
-	// return userKey 用户标识 如果userKey为空，结束执行
+	// 登录验证方法 return userKey 用户标识 如果userKey为空，结束执行
 	LoginBeforeFunc func(r *ghttp.Request) (string, interface{})
 	// 登录返回方法
 	LoginAfterFunc func(r *ghttp.Request, respData Resp)
-
 	// 登出地址
 	LogoutPath string
-	// 登出验证方法
-	// return true 继续执行，否则结束执行
+	// 登出验证方法 return true 继续执行，否则结束执行
 	LogoutBeforeFunc func(r *ghttp.Request) bool
 	// 登出返回方法
 	LogoutAfterFunc func(r *ghttp.Request, respData Resp)
 
 	// 拦截地址
 	AuthPaths g.SliceStr
-	// 认证验证方法
-	// return true 继续执行，否则结束执行
+	// 认证验证方法 return true 继续执行，否则结束执行
 	AuthBeforeFunc func(r *ghttp.Request) bool
 	// 认证返回方法
 	AuthAfterFunc func(r *ghttp.Request, respData Resp)
@@ -84,6 +84,10 @@ func (m *GfToken) Init() bool {
 		m.EncryptKey = []byte("12345678912345678912345678912345")
 	}
 
+	if m.AuthFailMsg == "" {
+		m.AuthFailMsg = "请求错误或登录超时"
+	}
+
 	if m.LoginAfterFunc == nil {
 		m.LoginAfterFunc = func(r *ghttp.Request, respData Resp) {
 			if !respData.Success() {
@@ -105,7 +109,7 @@ func (m *GfToken) Init() bool {
 	if m.LogoutAfterFunc == nil {
 		m.LogoutAfterFunc = func(r *ghttp.Request, respData Resp) {
 			if respData.Success() {
-				r.Response.WriteJson(Succ("logout success"))
+				r.Response.WriteJson(Succ("Logout success"))
 			} else {
 				r.Response.WriteJson(respData)
 			}
@@ -114,12 +118,38 @@ func (m *GfToken) Init() bool {
 
 	if m.AuthBeforeFunc == nil {
 		m.AuthBeforeFunc = func(r *ghttp.Request) bool {
+			// 静态页面不拦截
+			if r.IsFileRequest() {
+				return false
+			}
+
+			if r.IsExited() {
+				return false
+			}
+
 			return true
 		}
 	}
 	if m.AuthAfterFunc == nil {
 		m.AuthAfterFunc = func(r *ghttp.Request, respData Resp) {
-			if !respData.Success() {
+			if respData.Success() {
+				r.Middleware.Next()
+			} else {
+				var params map[string]interface{}
+				if r.Method == "GET" {
+					params = r.GetQueryMap()
+				} else if r.Method == "POST" {
+					params = r.GetPostMap()
+				} else {
+					r.Response.Writeln("Request Method is ERROR! ")
+					return
+				}
+
+				no := gconv.String(gtime.Millisecond())
+
+				glog.Info(fmt.Sprintf("[AUTH_%s_%d][url:%s][params:%s][data:%s]",
+					no, r.Id, r.URL.Path, params, respData.Json()))
+				respData.Msg = m.AuthFailMsg
 				r.Response.WriteJson(respData)
 				r.ExitAll()
 			}
@@ -150,7 +180,9 @@ func (m *GfToken) Start() bool {
 		return false
 	}
 	for _, authPath := range m.AuthPaths {
-		s.BindHookHandler(authPath, ghttp.HOOK_BEFORE_SERVE, m.authHook)
+		s.Group(authPath, func(g *ghttp.RouterGroup) {
+			g.Middleware(m.AuthMiddleware)
+		})
 	}
 
 	// 登录
@@ -158,14 +190,14 @@ func (m *GfToken) Start() bool {
 		glog.Error("[GToken]LoginPath or LoginBeforeFunc not set")
 		return false
 	}
-	s.BindHandler(m.LoginPath, m.login)
+	s.BindHandler(m.LoginPath, m.Login)
 
 	// 登出
 	if m.LogoutPath == "" {
 		glog.Error("[GToken]LogoutPath or LogoutFunc not set")
 		return false
 	}
-	s.BindHandler(m.LogoutPath, m.logout)
+	s.BindHandler(m.LogoutPath, m.Logout)
 
 	return true
 }
@@ -187,8 +219,8 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 	return respData
 }
 
-// login 登录
-func (m *GfToken) login(r *ghttp.Request) {
+// Login 登录
+func (m *GfToken) Login(r *ghttp.Request) {
 	userKey, data := m.LoginBeforeFunc(r)
 	if userKey != "" {
 		// 生成token
@@ -198,8 +230,8 @@ func (m *GfToken) login(r *ghttp.Request) {
 
 }
 
-// logout 登出
-func (m *GfToken) logout(r *ghttp.Request) {
+// Logout 登出
+func (m *GfToken) Logout(r *ghttp.Request) {
 	if m.LogoutBeforeFunc(r) {
 		// 获取请求token
 		respData := m.getRequestToken(r)
@@ -212,18 +244,23 @@ func (m *GfToken) logout(r *ghttp.Request) {
 	}
 }
 
-// authHook 认证拦截
-func (m *GfToken) authHook(r *ghttp.Request) {
-	if m.AuthBeforeFunc(r) {
-		// 获取请求token
-		tokenResp := m.getRequestToken(r)
-		if tokenResp.Success() {
-			// 验证token
-			tokenResp = m.validToken(tokenResp.DataString())
-		}
-
-		m.AuthAfterFunc(r, tokenResp)
+// AuthMiddleware 认证拦截
+func (m *GfToken) AuthMiddleware(r *ghttp.Request) {
+	// 不需要认证，直接下一步
+	if !m.AuthBeforeFunc(r) {
+		r.Middleware.Next()
+		return
 	}
+
+	// 获取请求token
+	tokenResp := m.getRequestToken(r)
+	if tokenResp.Success() {
+		// 验证token
+		tokenResp = m.validToken(tokenResp.DataString())
+	}
+
+	m.AuthAfterFunc(r, tokenResp)
+
 }
 
 // getRequestToken 返回请求Token
