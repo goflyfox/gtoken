@@ -123,10 +123,6 @@ func (m *GfToken) Init() bool {
 				return false
 			}
 
-			if r.IsExited() {
-				return false
-			}
-
 			return true
 		}
 	}
