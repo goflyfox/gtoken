@@ -143,8 +143,8 @@ func (m *GfToken) Init() bool {
 
 				no := gconv.String(gtime.Millisecond())
 
-				glog.Info(fmt.Sprintf("[AUTH_%s_%d][url:%s][params:%s][data:%s]",
-					no, r.Id, r.URL.Path, params, respData.Json()))
+				glog.Info(fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
+					no, r.URL.Path, params, respData.Json()))
 				respData.Msg = m.AuthFailMsg
 				r.Response.WriteJson(respData)
 				r.ExitAll()

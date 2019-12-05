@@ -12,7 +12,7 @@ import (
 func (m *GfToken) setCache(cacheKey string, userCache g.Map) Resp {
 	switch m.CacheMode {
 	case CacheModeCache:
-		gcache.Set(cacheKey, userCache, m.Timeout)
+		gcache.Set(cacheKey, userCache, gconv.Duration(m.Timeout*1000*1000))
 	case CacheModeRedis:
 		cacheValueJson, err1 := gjson.Encode(userCache)
 		if err1 != nil {

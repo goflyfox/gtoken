@@ -20,7 +20,7 @@ var (
 func TestHello(t *testing.T) {
 	t.Log("visit hello and no auth")
 	if r, e := ghttp.Post(TestURL+"/hello", "username="+Username); e != nil {
-		t.Error(e)
+		t.Error("error:", e)
 	} else {
 		defer r.Close()
 
@@ -30,10 +30,10 @@ func TestHello(t *testing.T) {
 		var respData gtoken.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
-			t.Error(err)
+			t.Error("error:", err)
 		}
 		if !respData.Success() {
-			t.Error(respData.Json())
+			t.Error("error:", respData.Json())
 		}
 	}
 }
@@ -42,7 +42,7 @@ func TestSystemUser(t *testing.T) {
 	// 未登录
 	t.Log("1. not login and visit user")
 	if r, e := ghttp.Post(TestURL+"/system/user", "username="+Username); e != nil {
-		t.Error(e)
+		t.Error("error:", e)
 	} else {
 		defer r.Close()
 
@@ -52,10 +52,10 @@ func TestSystemUser(t *testing.T) {
 		var respData gtoken.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
-			t.Error(err)
+			t.Error("error:", err)
 		}
 		if respData.Success() {
-			t.Error(respData.Json())
+			t.Error("error:", respData.Json())
 		}
 	}
 
@@ -65,7 +65,7 @@ func TestSystemUser(t *testing.T) {
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
-		t.Error(data.Json())
+		t.Error("error:", data.Json())
 	}
 
 	// 登出
@@ -74,14 +74,14 @@ func TestSystemUser(t *testing.T) {
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
-		t.Error(data.Json())
+		t.Error("error:", data.Json())
 	}
 
 	// 登出访问用户信息
 	t.Log("4. visit user")
 	data = Post(t, "/system/user", "username="+Username)
 	if data.Success() {
-		t.Error(data.Json())
+		t.Error("error:", data.Json())
 	} else {
 		t.Log(data.Json())
 	}
@@ -94,7 +94,7 @@ func TestSystemUser(t *testing.T) {
 //	if data.Success() {
 //		t.Log(data.Json())
 //	} else {
-//		t.Error(data.Json())
+//		t.Error("error:", data.Json())
 //	}
 //
 //	for i := 1; i < 9; i++ {
@@ -105,7 +105,7 @@ func TestSystemUser(t *testing.T) {
 //		if data.Success() {
 //			t.Log(data.Json())
 //		} else {
-//			t.Error(data.Json())
+//			t.Error("error:", data.Json())
 //		}
 //	}
 //
@@ -120,7 +120,7 @@ func TestLogin(t *testing.T) {
 	token2 := getToken(t)
 	t.Log("token:" + token2)
 	if token1 != token2 {
-		t.Error("token not same ")
+		t.Error("error:", "token not same ")
 	}
 	Username = "flyfox"
 }
@@ -132,7 +132,7 @@ func TestLogout(t *testing.T) {
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
-		t.Error(data.Json())
+		t.Error("error:", data.Json())
 	}
 	Username = "flyfox"
 }
@@ -144,7 +144,7 @@ func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
 	var respData gtoken.Resp
 	err := json.Unmarshal([]byte(content), &respData)
 	if err != nil {
-		t.Error(err)
+		t.Error("error:", err)
 	}
 	return respData
 }
@@ -155,7 +155,7 @@ func getToken(t *testing.T) string {
 	}
 
 	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
-		t.Error(e)
+		t.Error("error:", e)
 	} else {
 		defer r.Close()
 
@@ -164,11 +164,11 @@ func getToken(t *testing.T) string {
 		var respData gtoken.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
-			t.Error(err)
+			t.Error("error:", err)
 		}
 
 		if !respData.Success() {
-			t.Error("resp fail:" + respData.Json())
+			t.Error("error:", "resp fail:"+respData.Json())
 		}
 
 		Token[Username] = respData.GetString("token")
