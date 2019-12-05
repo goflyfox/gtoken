@@ -69,7 +69,7 @@ func bindRouter() {
 		LoginPath:       "/login",
 		LoginBeforeFunc: loginFunc,
 		LogoutPath:      "/user/logout",
-		AuthPaths:       g.SliceStr{"/system"},
+		AuthPaths:       g.SliceStr{"/user", "/system"},
 	}
 	gfToken.Start()
 

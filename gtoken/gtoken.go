@@ -176,9 +176,12 @@ func (m *GfToken) Start() bool {
 		return false
 	}
 	for _, authPath := range m.AuthPaths {
-		s.Group(authPath, func(g *ghttp.RouterGroup) {
-			g.Middleware(m.AuthMiddleware)
-		})
+		if strings.HasSuffix(authPath, "/*") {
+			s.BindMiddleware(authPath, m.AuthMiddleware)
+		} else {
+			s.BindMiddleware(authPath+"/*", m.AuthMiddleware)
+		}
+
 	}
 
 	// 登录
