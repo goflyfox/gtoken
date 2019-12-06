@@ -6,13 +6,14 @@ import (
 	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
+	"time"
 )
 
 // setCache 设置缓存
 func (m *GfToken) setCache(cacheKey string, userCache g.Map) Resp {
 	switch m.CacheMode {
 	case CacheModeCache:
-		gcache.Set(cacheKey, userCache, gconv.Duration(m.Timeout*1000*1000))
+		gcache.Set(cacheKey, userCache, gconv.Duration(m.Timeout)*time.Millisecond)
 	case CacheModeRedis:
 		cacheValueJson, err1 := gjson.Encode(userCache)
 		if err1 != nil {
