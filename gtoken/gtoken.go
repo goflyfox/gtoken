@@ -181,7 +181,6 @@ func (m *GfToken) Start() bool {
 		} else {
 			s.BindMiddleware(authPath+"/*", m.AuthMiddleware)
 		}
-
 	}
 
 	// 登录
