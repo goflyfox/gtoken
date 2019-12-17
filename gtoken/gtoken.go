@@ -36,6 +36,8 @@ type GfToken struct {
 	EncryptKey []byte
 	// 认证失败中文提示
 	AuthFailMsg string
+	// 是否支持多端登录，默认false
+	MultiLogin bool
 
 	// 登录路径
 	LoginPath string
@@ -220,11 +222,24 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 // Login 登录
 func (m *GfToken) Login(r *ghttp.Request) {
 	userKey, data := m.LoginBeforeFunc(r)
-	if userKey != "" {
-		// 生成token
-		respToken := m.genToken(userKey, data)
-		m.LoginAfterFunc(r, respToken)
+	if userKey == "" {
+		glog.Error("[GToken]Login userKey is empty")
+		return
 	}
+
+	if m.MultiLogin {
+		// 支持多端重复登录，返回相同token
+		userCacheResp := m.getToken(userKey)
+		if userCacheResp.Success() {
+			respToken := m.EncryptToken(userKey, userCacheResp.GetString("uuid"))
+			m.LoginAfterFunc(r, respToken)
+			return
+		}
+	}
+
+	// 生成token
+	respToken := m.genToken(userKey, data)
+	m.LoginAfterFunc(r, respToken)
 
 }
 
@@ -287,7 +302,7 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) Resp {
 
 // genToken 生成Token
 func (m *GfToken) genToken(userKey string, data interface{}) Resp {
-	token := m.EncryptToken(userKey)
+	token := m.EncryptToken(userKey, "")
 	if !token.Success() {
 		return token
 	}
@@ -322,6 +337,22 @@ func (m *GfToken) validToken(token string) Resp {
 
 	userKey := decryptToken.GetString("userKey")
 	uuid := decryptToken.GetString("uuid")
+
+	userCacheResp := m.getToken(userKey)
+	if !userCacheResp.Success() {
+		return userCacheResp
+	}
+
+	if uuid != userCacheResp.GetString("uuid") {
+		glog.Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(userCacheResp.Data))
+		return Unauthorized("user auth error", "")
+	}
+
+	return userCacheResp
+}
+
+// getToken 通过userKey获取Token
+func (m *GfToken) getToken(userKey string) Resp {
 	cacheKey := m.CacheKey + userKey
 
 	userCacheResp := m.getCache(cacheKey)
@@ -329,11 +360,6 @@ func (m *GfToken) validToken(token string) Resp {
 		return userCacheResp
 	}
 	userCache := gconv.Map(userCacheResp.Data)
-
-	if uuid != userCache["uuid"] {
-		glog.Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(userCache))
-		return Unauthorized("user auth error", "")
-	}
 
 	nowTime := gtime.Now().Millisecond()
 	refreshTime := userCache["refreshTime"]
@@ -361,16 +387,21 @@ func (m *GfToken) removeToken(token string) Resp {
 }
 
 // EncryptToken token加密方法
-func (m *GfToken) EncryptToken(userKey string) Resp {
+func (m *GfToken) EncryptToken(userKey string, uuid string) Resp {
 	if userKey == "" {
 		return Fail("encrypt userKey empty")
 	}
 
-	uuid, err := gmd5.Encrypt(grand.Str(10))
-	if err != nil {
-		glog.Error("[GToken]uuid error", err)
-		return Error("uuid error")
+	if uuid == "" {
+		// 重新生成uuid
+		newUuid, err := gmd5.Encrypt(grand.Str(10))
+		if err != nil {
+			glog.Error("[GToken]uuid error", err)
+			return Error("uuid error")
+		}
+		uuid = newUuid
 	}
+
 	tokenStr := userKey + m.TokenDelimiter + uuid
 
 	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)

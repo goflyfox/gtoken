@@ -65,11 +65,12 @@ func bindRouter() {
 	// 启动gtoken
 	gfToken := &gtoken.GfToken{
 		//Timeout:         10 * 1000,
-		CacheMode:       g.Config().GetInt8("cache-mode"),
+		CacheMode:       g.Config().GetInt8("gtoken.cache-mode"),
 		LoginPath:       "/login",
 		LoginBeforeFunc: loginFunc,
 		LogoutPath:      "/user/logout",
 		AuthPaths:       g.SliceStr{"/user", "/system"},
+		MultiLogin:      g.Config().GetBool("gtoken.multi-login"),
 	}
 	gfToken.Start()
 

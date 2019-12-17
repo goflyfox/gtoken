@@ -11,7 +11,7 @@ func TestEncryptDecryptToken(t *testing.T) {
 	gfToken.Init()
 
 	userKey := "123123"
-	token := gfToken.EncryptToken(userKey)
+	token := gfToken.EncryptToken(userKey, "")
 	if !token.Success() {
 		t.Error(token.Json())
 	}
@@ -37,7 +37,7 @@ func BenchmarkEncryptDecryptToken(b *testing.B) {
 	gfToken.Init()
 
 	userKey := "123123"
-	token := gfToken.EncryptToken(userKey)
+	token := gfToken.EncryptToken(userKey, "")
 	if !token.Success() {
 		b.Error(token.Json())
 	}

@@ -175,3 +175,65 @@ func getToken(t *testing.T) string {
 	}
 	return Token[Username]
 }
+
+func TestMultiLogin(t *testing.T) {
+	Username = "testLogin"
+	t.Log(" TestMultiLogin start... ")
+	var token1, token2 string
+	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+		t.Log("token1 content:" + content)
+
+		var respData gtoken.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if !respData.Success() {
+			t.Error("error:", "resp fail:"+respData.Json())
+		}
+
+		token1 = respData.GetString("token")
+	}
+	t.Log("token1:" + token1)
+
+	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+		t.Log("token2 content:" + content)
+
+		var respData gtoken.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if !respData.Success() {
+			t.Error("error:", "resp fail:"+respData.Json())
+		}
+
+		token2 = respData.GetString("token")
+	}
+
+	t.Log("token2:" + token2)
+
+	if g.Config().GetBool("gtoken.multi-login") {
+		if token1 != token2 {
+			t.Error("error:", "token not same ")
+		}
+	} else {
+		if token1 == token2 {
+			t.Error("error:", "token same ")
+		}
+	}
+
+	Username = "flyfox"
+}

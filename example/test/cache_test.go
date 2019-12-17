@@ -27,7 +27,7 @@ func TestGCache(t *testing.T) {
 }
 
 func TestRedisCache(t *testing.T) {
-	if g.Config().GetInt8("cache-mode") != gtoken.CacheModeRedis {
+	if g.Config().GetInt8("gtoken.cache-mode") != gtoken.CacheModeRedis {
 		t.Log("redis cache not test ")
 		return
 	}
