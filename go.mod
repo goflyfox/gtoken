@@ -1,7 +1,7 @@
 module github.com/goflyfox/gtoken
 
 require (
-	github.com/gogf/gf v1.10.0
+	github.com/gogf/gf v1.10.1
 	google.golang.org/appengine v1.6.5 // indirect
 )
 

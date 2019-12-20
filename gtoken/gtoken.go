@@ -313,7 +313,7 @@ func (m *GfToken) genToken(userKey string, data interface{}) Resp {
 		"uuid":        token.GetString("uuid"),
 		"data":        data,
 		"createTime":  gtime.Now().Millisecond(),
-		"refreshTime": gtime.Now().Millisecond() + gconv.Int64(m.MaxRefresh),
+		"refreshTime": gtime.Now().Millisecond() + m.MaxRefresh,
 	}
 
 	cacheResp := m.setCache(cacheKey, userCache)
@@ -365,9 +365,9 @@ func (m *GfToken) getToken(userKey string) Resp {
 	refreshTime := userCache["refreshTime"]
 
 	// 需要进行缓存超时时间刷新
-	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int64(refreshTime) {
+	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int(refreshTime) {
 		userCache["createTime"] = gtime.Now().Millisecond()
-		userCache["refreshTime"] = gtime.Now().Millisecond() + gconv.Int64(m.MaxRefresh)
+		userCache["refreshTime"] = gtime.Now().Millisecond() + m.MaxRefresh
 		glog.Debug("[GToken]refreshToken:" + gconv.String(userCache))
 		return m.setCache(cacheKey, userCache)
 	}
