@@ -135,9 +135,9 @@ func (m *GfToken) Init() bool {
 			} else {
 				var params map[string]interface{}
 				if r.Method == "GET" {
-					params = r.GetQueryMap()
+					params = r.GetMap()
 				} else if r.Method == "POST" {
-					params = r.GetQueryMap()
+					params = r.GetMap()
 				} else {
 					r.Response.Writeln("Request Method is ERROR! ")
 					return
