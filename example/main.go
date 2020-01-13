@@ -106,8 +106,8 @@ func initRouter() {
 }
 
 func Login(r *ghttp.Request) (string, interface{}) {
-	username := r.GetPostString("username")
-	passwd := r.GetPostString("passwd")
+	username := r.GetString("username")
+	passwd := r.GetString("passwd")
 
 	if username == "" || passwd == "" {
 		r.Response.WriteJson(gtoken.Fail("账号或密码错误."))

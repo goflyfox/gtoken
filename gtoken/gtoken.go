@@ -137,13 +137,13 @@ func (m *GfToken) Init() bool {
 				if r.Method == "GET" {
 					params = r.GetQueryMap()
 				} else if r.Method == "POST" {
-					params = r.GetPostMap()
+					params = r.GetQueryMap()
 				} else {
 					r.Response.Writeln("Request Method is ERROR! ")
 					return
 				}
 
-				no := gconv.String(gtime.Millisecond())
+				no := gconv.String(gtime.TimestampMilli())
 
 				glog.Info(fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
 					no, r.URL.Path, params, respData.Json()))
@@ -292,7 +292,7 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) Resp {
 		return Succ(parts[1])
 	}
 
-	authHeader = r.GetPostString("token")
+	authHeader = r.GetString("token")
 	if authHeader == "" {
 		return Unauthorized("query token fail", "")
 	}
