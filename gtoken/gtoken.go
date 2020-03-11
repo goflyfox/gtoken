@@ -394,7 +394,7 @@ func (m *GfToken) EncryptToken(userKey string, uuid string) Resp {
 
 	if uuid == "" {
 		// 重新生成uuid
-		newUuid, err := gmd5.Encrypt(grand.Str(10))
+		newUuid, err := gmd5.Encrypt(grand.Letters(10))
 		if err != nil {
 			glog.Error("[GToken]uuid error", err)
 			return Error("uuid error")
