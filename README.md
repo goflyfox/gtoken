@@ -19,8 +19,13 @@ Timeout int
 // 缓存刷新时间 默认为超时时间的一半
 MaxRefresh int
 ```
+4. 支持全局拦截或者深度路径拦截，便于根据个人需求定制拦截器
+```
+// 是否是全局认证
+GlobalMiddleware bool
+```
 
-4. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
+5. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
 
 * github地址：https://github.com/goflyfox/gtoken
 * gitee地址：https://gitee.com/goflyfox/gtoken
@@ -47,7 +52,8 @@ MaxRefresh int
 		LoginPath:       "/login",
 		LoginBeforeFunc: loginFunc,
 		LogoutPath:      "/user/logout",
-		AuthPaths:       g.SliceStr{"/user/*", "/system/*"},
+		AuthPaths:        g.SliceStr{"/user", "/system"}, // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		GlobalMiddleware: true,                           // 开启全局拦截，默认关闭
 	}
 	gtoken.Start()
 ```

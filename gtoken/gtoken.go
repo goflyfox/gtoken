@@ -38,6 +38,8 @@ type GfToken struct {
 	AuthFailMsg string
 	// 是否支持多端登录，默认false
 	MultiLogin bool
+	// 是否是全局认证
+	GlobalMiddleware bool
 
 	// 登录路径
 	LoginPath string
@@ -177,11 +179,17 @@ func (m *GfToken) Start() bool {
 		glog.Error("[GToken]HookPathList not set")
 		return false
 	}
-	for _, authPath := range m.AuthPaths {
-		if strings.HasSuffix(authPath, "/*") {
-			s.BindMiddleware(authPath, m.AuthMiddleware)
-		} else {
-			s.BindMiddleware(authPath+"/*", m.AuthMiddleware)
+
+	// 是否是全局拦截
+	if m.GlobalMiddleware {
+		s.BindMiddleware("/*", m.AuthMiddleware)
+	} else {
+		for _, authPath := range m.AuthPaths {
+			tmpPath := authPath
+			if !strings.HasSuffix(authPath, "/*") {
+				tmpPath += "/*"
+			}
+			s.BindMiddleware(tmpPath, m.AuthMiddleware)
 		}
 	}
 
@@ -259,6 +267,26 @@ func (m *GfToken) Logout(r *ghttp.Request) {
 
 // AuthMiddleware 认证拦截
 func (m *GfToken) AuthMiddleware(r *ghttp.Request) {
+	// 全局处理，认证路径拦截处理
+	if m.GlobalMiddleware {
+		urlPath := r.URL.Path
+		var nextFlag bool
+		for _, authPath := range m.AuthPaths {
+			tmpPath := authPath
+			if strings.HasSuffix(authPath, "/*") {
+				tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-2)
+			}
+			if gstr.HasPrefix(urlPath, authPath) {
+				nextFlag = true
+			}
+		}
+
+		if !nextFlag {
+			r.Middleware.Next()
+			return
+		}
+	}
+
 	// 不需要认证，直接下一步
 	if !m.AuthBeforeFunc(r) {
 		r.Middleware.Next()

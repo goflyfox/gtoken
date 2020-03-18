@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/text/gstr"
 )
 
 func main() {
@@ -53,6 +54,8 @@ func initConfig() {
 func bindRouter() {
 
 	s := g.Server()
+	s.BindMiddleware("/*", CORS)
+
 	// 调试路由
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.WriteJson(gtoken.Succ("hello"))
@@ -65,12 +68,13 @@ func bindRouter() {
 	// 启动gtoken
 	gfToken := &gtoken.GfToken{
 		//Timeout:         10 * 1000,
-		CacheMode:       g.Config().GetInt8("gtoken.cache-mode"),
-		LoginPath:       "/login",
-		LoginBeforeFunc: loginFunc,
-		LogoutPath:      "/user/logout",
-		AuthPaths:       g.SliceStr{"/user", "/system"},
-		MultiLogin:      g.Config().GetBool("gtoken.multi-login"),
+		CacheMode:        g.Config().GetInt8("gtoken.cache-mode"),
+		LoginPath:        "/login",
+		LoginBeforeFunc:  loginFunc,
+		LogoutPath:       "/user/logout",
+		AuthPaths:        g.SliceStr{"/user", "/system"}, // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		GlobalMiddleware: true,                           // 开启全局拦截
+		MultiLogin:       g.Config().GetBool("gtoken.multi-login"),
 	}
 	gfToken.Start()
 
@@ -115,4 +119,25 @@ func Login(r *ghttp.Request) (string, interface{}) {
 	}
 
 	return username, ""
+}
+
+func CORS(r *ghttp.Request) {
+	opt := ghttp.CORSOptions{
+		AllowOrigin:      "*",
+		AllowMethods:     ghttp.HTTP_METHODS,
+		AllowCredentials: "true",
+		AllowHeaders:     "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With,version,time,uuid,sign",
+		MaxAge:           3628800,
+	}
+	if origin := r.Request.Header.Get("Origin"); origin != "" {
+		opt.AllowOrigin = origin
+	} else if referer := r.Request.Referer(); referer != "" {
+		if p := gstr.PosR(referer, "/", 6); p != -1 {
+			opt.AllowOrigin = referer[:p]
+		} else {
+			opt.AllowOrigin = referer
+		}
+	}
+	r.Response.CORS(opt)
+	r.Middleware.Next()
 }
