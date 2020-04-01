@@ -37,6 +37,32 @@ func TestAuthPath(t *testing.T) {
 	authPath(gfToken, t)
 }
 
+func TestAuthPathNoExclude(t *testing.T) {
+	t.Log("auth no exclude path test ")
+	// 启动gtoken
+	gfToken := &gtoken.GfToken{
+		//Timeout:         10 * 1000,
+		AuthPaths:        g.SliceStr{"/user", "/system"}, // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		GlobalMiddleware: true,                           // 关闭全局拦截
+	}
+
+	authFlag := gfToken.AuthPath
+	if authFlag("/test") {
+		t.Error("/test auth path error")
+	}
+	if !authFlag("/system/dept") {
+		t.Error("/system/dept auth path error")
+	}
+
+	if !authFlag("/user/info") {
+		t.Error("/user/info auth path error")
+	}
+
+	if !authFlag("/system/user") {
+		t.Error("/system/user auth path error")
+	}
+}
+
 func TestAuthPathExclude(t *testing.T) {
 	t.Log("auth path test ")
 	// 启动gtoken
