@@ -73,9 +73,9 @@ func Login(r *ghttp.Request) (string, interface{}) {
 
 #### 路径拦截规则
 ```go
-		AuthPaths:        g.SliceStr{"/user", "/system"},             // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
-		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
-        GlobalMiddleware: true,                           // 开启全局拦截，默认关闭
+    AuthPaths:        g.SliceStr{"/user", "/system"},             // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+    AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
+    GlobalMiddleware: true,                           // 开启全局拦截，默认关闭
 ```
 
 1. `GlobalMiddleware:true`全局拦截的是通过GF的`BindMiddleware`方法创建拦截`/*`
