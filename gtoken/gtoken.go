@@ -56,6 +56,8 @@ type GfToken struct {
 
 	// 拦截地址
 	AuthPaths g.SliceStr
+	// 拦截排除地址
+	AuthExcludePaths g.SliceStr
 	// 认证验证方法 return true 继续执行，否则结束执行
 	AuthBeforeFunc func(r *ghttp.Request) bool
 	// 认证返回方法
@@ -182,7 +184,7 @@ func (m *GfToken) Start() bool {
 
 	// 是否是全局拦截
 	if m.GlobalMiddleware {
-		s.BindMiddleware("/*", m.AuthMiddleware)
+		s.BindMiddlewareDefault(m.AuthMiddleware)
 	} else {
 		for _, authPath := range m.AuthPaths {
 			tmpPath := authPath
@@ -267,24 +269,11 @@ func (m *GfToken) Logout(r *ghttp.Request) {
 
 // AuthMiddleware 认证拦截
 func (m *GfToken) AuthMiddleware(r *ghttp.Request) {
-	// 全局处理，认证路径拦截处理
-	if m.GlobalMiddleware {
-		urlPath := r.URL.Path
-		var nextFlag bool
-		for _, authPath := range m.AuthPaths {
-			tmpPath := authPath
-			if strings.HasSuffix(authPath, "/*") {
-				tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-2)
-			}
-			if gstr.HasPrefix(urlPath, authPath) {
-				nextFlag = true
-			}
-		}
-
-		if !nextFlag {
-			r.Middleware.Next()
-			return
-		}
+	urlPath := r.URL.Path
+	if !m.AuthPath(urlPath) {
+		// 如果不需要认证，继续
+		r.Middleware.Next()
+		return
 	}
 
 	// 不需要认证，直接下一步
@@ -302,6 +291,59 @@ func (m *GfToken) AuthMiddleware(r *ghttp.Request) {
 
 	m.AuthAfterFunc(r, tokenResp)
 
+}
+
+// 判断路径是否需要进行认证拦截
+// return true 需要认证
+func (m *GfToken) AuthPath(urlPath string) bool {
+	// 去除后斜杠
+	if strings.HasSuffix(urlPath, "/") {
+		urlPath = gstr.SubStr(urlPath, 0, len(urlPath)-1)
+	}
+
+	// 全局处理，认证路径拦截处理
+	if m.GlobalMiddleware {
+		var authFlag bool
+		for _, authPath := range m.AuthPaths {
+			tmpPath := authPath
+			if strings.HasSuffix(tmpPath, "/*") {
+				tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-2)
+			}
+			if gstr.HasPrefix(urlPath, tmpPath) {
+				authFlag = true
+				break
+			}
+		}
+
+		if !authFlag {
+			// 拦截路径不匹配
+			return false
+		}
+	}
+
+	// 排除路径处理，到这里nextFlag为true
+	for _, excludePath := range m.AuthExcludePaths {
+		tmpPath := excludePath
+		// 前缀匹配
+		if strings.HasSuffix(tmpPath, "/*") {
+			tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-2)
+			if gstr.HasPrefix(urlPath, tmpPath) {
+				// 前缀匹配不拦截
+				return false
+			}
+		} else {
+			// 全路径匹配
+			if strings.HasSuffix(tmpPath, "/") {
+				tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-1)
+			}
+			if urlPath == tmpPath {
+				// 全路径匹配不拦截
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 // getRequestToken 返回请求Token

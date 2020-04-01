@@ -71,6 +71,19 @@ func Login(r *ghttp.Request) (string, interface{}) {
 }
 ```
 
+#### 路径拦截规则
+```go
+		AuthPaths:        g.SliceStr{"/user", "/system"},             // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
+        GlobalMiddleware: true,                           // 开启全局拦截，默认关闭
+```
+
+1. `GlobalMiddleware:true`全局拦截的是通过GF的`BindMiddleware`方法创建拦截`/*`
+2. `GlobalMiddleware:false`路径拦截的是通过GF的`BindMiddleware`方法创建拦截`/user*和/system/*`
+3. 按照中间件优先级路径拦截优先级很高；如果先实现部分中间件在认证前处理需要切换成全局拦截器，严格按照注册顺序即可；
+4. 程序先处理认证路径，如果满足；再排除不拦截路径；
+5. 如果只想用排除路径功能，将拦截路径设置为`/*`即可；
+
 #### 逻辑测试
 
 可运行api_test.go进行测试并查看结果；验证逻辑说明：

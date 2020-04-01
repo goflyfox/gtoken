@@ -2,8 +2,104 @@ package gtoken_test
 
 import (
 	"github.com/goflyfox/gtoken/gtoken"
+	"github.com/gogf/gf/frame/g"
 	"testing"
 )
+
+func TestAuthPathGlobal(t *testing.T) {
+	t.Log("auth path test ")
+	// 启动gtoken
+	gfToken := &gtoken.GfToken{
+		//Timeout:         10 * 1000,
+		AuthPaths:        g.SliceStr{"/user", "/system"},             // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
+		GlobalMiddleware: true,                                       // 开启全局拦截
+	}
+
+	authPath(gfToken, t)
+	flag := gfToken.AuthPath("/test")
+	if flag {
+		t.Error("/test auth path error")
+	}
+
+}
+
+func TestAuthPath(t *testing.T) {
+	t.Log("auth path test ")
+	// 启动gtoken
+	gfToken := &gtoken.GfToken{
+		//Timeout:         10 * 1000,
+		AuthPaths:        g.SliceStr{"/user", "/system"},             // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
+		GlobalMiddleware: false,                                      // 关闭全局拦截
+	}
+
+	authPath(gfToken, t)
+}
+
+func TestAuthPathExclude(t *testing.T) {
+	t.Log("auth path test ")
+	// 启动gtoken
+	gfToken := &gtoken.GfToken{
+		//Timeout:         10 * 1000,
+		AuthPaths:        g.SliceStr{"/*"},                           // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
+		GlobalMiddleware: true,                                       // 开启全局拦截
+	}
+
+	authFlag := gfToken.AuthPath
+	if !authFlag("/test") {
+		t.Error("/test auth path error")
+	}
+	if !authFlag("//system/dept") {
+		t.Error("/system/dept auth path error")
+	}
+
+	if authFlag("/user/info") {
+		t.Error("/user/info auth path error")
+	}
+
+	if authFlag("/system/user") {
+		t.Error("/system/user auth path error")
+	}
+
+	if authFlag("/system/user/info") {
+		t.Error("/system/user/info auth path error")
+	}
+
+}
+
+func authPath(gfToken *gtoken.GfToken, t *testing.T) {
+	flag := gfToken.AuthPath("/user/info")
+	if flag {
+		t.Error("/user/info auth path error")
+	}
+
+	flag = gfToken.AuthPath("/system/user")
+	if flag {
+		t.Error("/system/user auth path error")
+	}
+
+	flag = gfToken.AuthPath("/system/user/info")
+	if flag {
+		t.Error("/system/user/info auth path error")
+	}
+
+	flag = gfToken.AuthPath("/system/dept")
+	if !flag {
+		t.Error("/system/dept auth path error")
+	}
+
+	flag = gfToken.AuthPath("/user/list")
+	if !flag {
+		t.Error("/user/list auth path error")
+	}
+
+	flag = gfToken.AuthPath("/user/add")
+	if !flag {
+		t.Error("/user/add auth path error")
+	}
+}
 
 func TestEncryptDecryptToken(t *testing.T) {
 	t.Log("encrypt and decrypt token test ")

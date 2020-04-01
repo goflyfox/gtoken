@@ -63,6 +63,12 @@ func bindRouter() {
 	s.BindHandler("/system/user", func(r *ghttp.Request) {
 		r.Response.WriteJson(gtoken.Succ("system user"))
 	})
+	s.BindHandler("/user/info", func(r *ghttp.Request) {
+		r.Response.WriteJson(gtoken.Succ("user info"))
+	})
+	s.BindHandler("/system/user/info", func(r *ghttp.Request) {
+		r.Response.WriteJson(gtoken.Succ("system user info"))
+	})
 
 	loginFunc := Login
 	// 启动gtoken
@@ -72,8 +78,9 @@ func bindRouter() {
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
-		AuthPaths:        g.SliceStr{"/user", "/system"}, // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
-		GlobalMiddleware: true,                           // 开启全局拦截
+		AuthPaths:        g.SliceStr{"/user", "/system"},                // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
+		GlobalMiddleware: true,                                          // 开启全局拦截
 		MultiLogin:       g.Config().GetBool("gtoken.multi-login"),
 	}
 	gfToken.Start()

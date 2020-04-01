@@ -87,6 +87,47 @@ func TestSystemUser(t *testing.T) {
 	}
 }
 
+func TestExclude(t *testing.T) {
+	// 未登录可以访问
+	t.Log("1. exclude user info")
+	if r, e := ghttp.Post(TestURL+"/system/user/info", "username="+Username); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+		t.Log(content)
+
+		var respData gtoken.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+		if !respData.Success() {
+			t.Error("error:", respData.Json())
+		}
+	}
+
+	if r, e := ghttp.Post(TestURL+"/user/info", "username="+Username); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+		t.Log(content)
+
+		var respData gtoken.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+		if !respData.Success() {
+			t.Error("error:", respData.Json())
+		}
+	}
+
+}
+
 //func TestRefresh(t *testing.T) {
 //	// 登录，访问用户信息
 //	t.Log("1. execute login and visit user")
