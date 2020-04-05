@@ -8,8 +8,12 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
+var TestServerName string
+
+//var TestServerName string = "gtoken"
+
 func main() {
-	g.Server().Run()
+	g.Server(TestServerName).Run()
 }
 
 // 管理初始化顺序.
@@ -24,7 +28,7 @@ func initConfig() {
 
 	v := g.View()
 	c := g.Config()
-	s := g.Server()
+	s := g.Server(TestServerName)
 
 	path := ""
 	// 配置对象及视图对象配置
@@ -53,7 +57,7 @@ func initConfig() {
 */
 func bindRouter() {
 
-	s := g.Server()
+	s := g.Server(TestServerName)
 	s.BindMiddleware("/*", CORS)
 
 	// 调试路由
@@ -73,6 +77,7 @@ func bindRouter() {
 	loginFunc := Login
 	// 启动gtoken
 	gfToken := &gtoken.GfToken{
+		ServerName: TestServerName,
 		//Timeout:         10 * 1000,
 		CacheMode:        g.Config().GetInt8("gtoken.cache-mode"),
 		LoginPath:        "/login",
@@ -92,7 +97,7 @@ func bindRouter() {
 */
 func initRouter() {
 
-	s := g.Server()
+	s := g.Server(TestServerName)
 
 	// 绑定路由
 	bindRouter()

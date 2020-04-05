@@ -22,6 +22,8 @@ const (
 
 // GfToken gtoken结构体
 type GfToken struct {
+	// GoFrame server name
+	ServerName string
 	// 缓存模式 1 gcache 2 gredis 默认1
 	CacheMode int8
 	// 缓存key
@@ -168,7 +170,7 @@ func (m *GfToken) Start() bool {
 	}
 	glog.Info("[GToken][params:" + m.String() + "]start... ")
 
-	s := g.Server()
+	s := g.Server(m.ServerName)
 
 	// 缓存模式
 	if m.CacheMode > CacheModeRedis {
