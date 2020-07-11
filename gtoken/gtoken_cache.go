@@ -20,7 +20,7 @@ func (m *GfToken) setCache(cacheKey string, userCache g.Map) Resp {
 			glog.Error("[GToken]cache json encode error", err1)
 			return Error("cache json encode error")
 		}
-		_, err := g.Redis().Do("SETEX", cacheKey, m.Timeout, cacheValueJson)
+		_, err := g.Redis().Do("SETEX", cacheKey, m.Timeout/1000, cacheValueJson)
 		if err != nil {
 			glog.Error("[GToken]cache set error", err)
 			return Error("cache set error")

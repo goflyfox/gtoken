@@ -28,9 +28,9 @@ type GfToken struct {
 	CacheMode int8
 	// 缓存key
 	CacheKey string
-	// 超时时间 默认10天
+	// 超时时间 默认10天（毫秒）
 	Timeout int
-	// 缓存刷新时间 默认为超时时间的一半
+	// 缓存刷新时间 默认为超时时间的一半（毫秒）
 	MaxRefresh int
 	// Token分隔符
 	TokenDelimiter string
@@ -384,8 +384,8 @@ func (m *GfToken) genToken(userKey string, data interface{}) Resp {
 		"userKey":     userKey,
 		"uuid":        token.GetString("uuid"),
 		"data":        data,
-		"createTime":  gtime.Now().Millisecond(),
-		"refreshTime": gtime.Now().Millisecond() + m.MaxRefresh,
+		"createTime":  gtime.Now().TimestampMilli(),
+		"refreshTime": gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh),
 	}
 
 	cacheResp := m.setCache(cacheKey, userCache)
@@ -433,13 +433,13 @@ func (m *GfToken) getToken(userKey string) Resp {
 	}
 	userCache := gconv.Map(userCacheResp.Data)
 
-	nowTime := gtime.Now().Millisecond()
+	nowTime := gtime.Now().TimestampMilli()
 	refreshTime := userCache["refreshTime"]
 
 	// 需要进行缓存超时时间刷新
-	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int(refreshTime) {
-		userCache["createTime"] = gtime.Now().Millisecond()
-		userCache["refreshTime"] = gtime.Now().Millisecond() + m.MaxRefresh
+	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int64(refreshTime) {
+		userCache["createTime"] = gtime.Now().TimestampMilli()
+		userCache["refreshTime"] = gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh)
 		glog.Debug("[GToken]refreshToken:" + gconv.String(userCache))
 		return m.setCache(cacheKey, userCache)
 	}
