@@ -262,7 +262,7 @@ func (m *GfToken) Logout(r *ghttp.Request) {
 		respData := m.getRequestToken(r)
 		if respData.Success() {
 			// 删除token
-			m.removeToken(respData.DataString())
+			m.RemoveToken(respData.DataString())
 		}
 
 		m.LogoutAfterFunc(r, respData)
@@ -448,7 +448,7 @@ func (m *GfToken) getToken(userKey string) Resp {
 }
 
 // removeToken 删除Token
-func (m *GfToken) removeToken(token string) Resp {
+func (m *GfToken) RemoveToken(token string) Resp {
 	decryptToken := m.DecryptToken(token)
 	if !decryptToken.Success() {
 		return decryptToken
