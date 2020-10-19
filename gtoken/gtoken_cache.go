@@ -37,7 +37,11 @@ func (m *GfToken) getCache(cacheKey string) Resp {
 	var userCache g.Map
 	switch m.CacheMode {
 	case CacheModeCache:
-		userCacheValue := gcache.Get(cacheKey)
+		userCacheValue, err := gcache.Get(cacheKey)
+		if err != nil {
+			glog.Error("[GToken]cache get error", err)
+			return Error("cache get error")
+		}
 		if userCacheValue == nil {
 			return Unauthorized("login timeout or not login", "")
 		}

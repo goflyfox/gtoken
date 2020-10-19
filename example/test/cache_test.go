@@ -15,12 +15,21 @@ func TestGCache(t *testing.T) {
 	userKey := "123123"
 	gcache.Set(userKey, "1", 10000)
 
-	if gcache.Get(userKey).(string) == userKey {
+	value, err := gcache.Get(userKey)
+	if err != nil {
+		t.Error("cache set error," + err.Error())
+	}
+	if value.(string) == userKey {
 		t.Error("cache get error")
 	}
 
 	gcache.Remove(userKey)
-	if gcache.Get(userKey) != nil {
+
+	value, err = gcache.Get(userKey)
+	if err != nil {
+		t.Error("cache set error," + err.Error())
+	}
+	if value != nil {
 		t.Error("cache remove error")
 	}
 
