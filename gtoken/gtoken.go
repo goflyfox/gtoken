@@ -521,13 +521,17 @@ func (m *GfToken) DecryptToken(token string) Resp {
 func (m *GfToken) String() string {
 	return gconv.String(g.Map{
 		// 缓存模式 1 gcache 2 gredis 默认1
-		"CacheMode":      m.CacheMode,
-		"CacheKey":       m.CacheKey,
-		"Timeout":        m.Timeout,
-		"TokenDelimiter": m.TokenDelimiter,
-		"EncryptKey":     string(m.EncryptKey),
-		"LoginPath":      m.LoginPath,
-		"LogoutPath":     m.LogoutPath,
-		"AuthPaths":      gconv.String(m.AuthPaths),
+		"CacheMode":        m.CacheMode,
+		"CacheKey":         m.CacheKey,
+		"Timeout":          m.Timeout,
+		"TokenDelimiter":   m.TokenDelimiter,
+		"EncryptKey":       string(m.EncryptKey),
+		"AuthFailMsg":      m.AuthFailMsg,
+		"MultiLogin":       m.MultiLogin,
+		"GlobalMiddleware": m.GlobalMiddleware,
+		"LoginPath":        m.LoginPath,
+		"LogoutPath":       m.LogoutPath,
+		"AuthPaths":        gconv.String(m.AuthPaths),
+		"AuthExcludePaths": gconv.String(m.AuthExcludePaths),
 	})
 }

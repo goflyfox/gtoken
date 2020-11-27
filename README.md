@@ -58,7 +58,7 @@ GlobalMiddleware bool
 	gtoken.Start()
 ```
 
-登录方法实现
+登录方法实现，通过username返回是否为空判断登录是否成功；
 
 ```go
 func Login(r *ghttp.Request) (string, interface{}) {
@@ -94,17 +94,28 @@ func Login(r *ghttp.Request) (string, interface{}) {
 4. 携带之前token访问，提示未登录
 
 ```json
---- PASS: TestSystemUser (0.00s)
+=== RUN   TestSystemUser
     api_test.go:43: 1. not login and visit user
-    api_test.go:50: {"code":-1,"data":"","msg":"query token fail"}
+    api_test.go:50: {"code":-401,"msg":"请求错误或登录超时","data":""}
     api_test.go:63: 2. execute login and visit user
     api_test.go:66: {"code":0,"msg":"success","data":"system user"}
     api_test.go:72: 3. execute logout
-    api_test.go:75: {"code":0,"msg":"success","data":"logout success"}
+    api_test.go:75: {"code":0,"msg":"success","data":"Logout success"}
     api_test.go:81: 4. visit user
-    api_test.go:86: {"code":-1,"msg":"login timeout or not login","data":""}
+    api_test.go:86: {"code":-401,"msg":"请求错误或登录超时","data":""}
 ```
+#### 返回码
+       
+1. 正常操作成功返回0
+2. 未登录访问需要登录资源返回401
+3. 程序异常返回-99，如编解码错误等
 
+```go
+SUCCESS      = 0  // 正常
+FAIL         = -1  // 失败
+ERROR        = -99  // 异常
+UNAUTHORIZED = -401  // 未认证
+```
 #### 感谢
 
 1. gf框架 [https://github.com/gogf/gf](https://github.com/gogf/gf) 
