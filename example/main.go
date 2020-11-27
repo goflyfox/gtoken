@@ -58,20 +58,23 @@ func initConfig() {
 func bindRouter() {
 
 	s := g.Server(TestServerName)
-	s.BindMiddleware("/*", CORS)
 
-	// 调试路由
-	s.BindHandler("/hello", func(r *ghttp.Request) {
-		r.Response.WriteJson(gtoken.Succ("hello"))
-	})
-	s.BindHandler("/system/user", func(r *ghttp.Request) {
-		r.Response.WriteJson(gtoken.Succ("system user"))
-	})
-	s.BindHandler("/user/info", func(r *ghttp.Request) {
-		r.Response.WriteJson(gtoken.Succ("user info"))
-	})
-	s.BindHandler("/system/user/info", func(r *ghttp.Request) {
-		r.Response.WriteJson(gtoken.Succ("system user info"))
+	s.Group("/", func(g *ghttp.RouterGroup) {
+		g.Middleware(CORS)
+
+		// 调试路由
+		g.ALL("/hello", func(r *ghttp.Request) {
+			r.Response.WriteJson(gtoken.Succ("hello"))
+		})
+		g.ALL("/system/user", func(r *ghttp.Request) {
+			r.Response.WriteJson(gtoken.Succ("system user"))
+		})
+		g.ALL("/user/info", func(r *ghttp.Request) {
+			r.Response.WriteJson(gtoken.Succ("user info"))
+		})
+		g.ALL("/system/user/info", func(r *ghttp.Request) {
+			r.Response.WriteJson(gtoken.Succ("system user info"))
+		})
 	})
 
 	loginFunc := Login
