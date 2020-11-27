@@ -52,6 +52,8 @@ func initConfig() {
 	glog.Info("########service finish.")
 }
 
+var gfToken *gtoken.GfToken
+
 /*
 绑定业务路由
 */
@@ -133,7 +135,7 @@ func Login(r *ghttp.Request) (string, interface{}) {
 		r.ExitAll()
 	}
 
-	return username, ""
+	return username, "1"
 }
 
 func CORS(r *ghttp.Request) {

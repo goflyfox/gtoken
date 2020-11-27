@@ -87,6 +87,29 @@ func TestSystemUser(t *testing.T) {
 	}
 }
 
+func TestUserLoginFail(t *testing.T) {
+	// 登录失败
+	t.Log("1. login fail ")
+	if r, e := ghttp.Post(TestURL+"/login", "username=&passwd="); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+
+		var respData gtoken.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if respData.Success() {
+			t.Error("error:", "login fail:"+respData.Json())
+		}
+	}
+
+}
+
 func TestExclude(t *testing.T) {
 	// 未登录可以访问
 	t.Log("1. exclude user info")

@@ -58,7 +58,7 @@ GlobalMiddleware bool
 	gtoken.Start()
 ```
 
-登录方法实现，通过username返回是否为空判断登录是否成功；
+登录方法实现，通过username返回空或者r.ExitAll()\r.Exit()处理认证失败；
 
 ```go
 func Login(r *ghttp.Request) (string, interface{}) {
@@ -66,10 +66,16 @@ func Login(r *ghttp.Request) (string, interface{}) {
 	passwd := r.GetPostString("passwd")
 
 	// TODO 进行登录校验
+	if username == "" || passwd == "" {
+		r.Response.WriteJson(gtoken.Fail("账号或密码错误."))
+		r.ExitAll()
+	}
 
 	return username, ""
 }
 ```
+
+通过`gtoken.GetTokenData(r)`获取登录信息
 
 #### 路径拦截规则
 ```go
