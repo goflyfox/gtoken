@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	TestURL string = "http://127.0.0.1:8082"
+	TestURL string = "http://127.0.0.1:8081"
 )
 
 var (
@@ -201,45 +201,6 @@ func TestLogout(t *testing.T) {
 	Username = "flyfox"
 }
 
-func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
-	client := ghttp.NewClient()
-	client.SetHeader("Authorization", "Bearer "+getToken(t))
-	content := client.RequestContent("POST", TestURL+urlPath, data...)
-	var respData gtoken.Resp
-	err := json.Unmarshal([]byte(content), &respData)
-	if err != nil {
-		t.Error("error:", err)
-	}
-	return respData
-}
-
-func getToken(t *testing.T) string {
-	if Token[Username] != "" {
-		return Token[Username]
-	}
-
-	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
-
-		content := string(r.ReadAll())
-
-		var respData gtoken.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-
-		if !respData.Success() {
-			t.Error("error:", "resp fail:"+respData.Json())
-		}
-
-		Token[Username] = respData.GetString("token")
-	}
-	return Token[Username]
-}
-
 func TestMultiLogin(t *testing.T) {
 	Username = "testLogin"
 	t.Log(" TestMultiLogin start... ")
@@ -300,4 +261,43 @@ func TestMultiLogin(t *testing.T) {
 	}
 
 	Username = "flyfox"
+}
+
+func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
+	client := ghttp.NewClient()
+	client.SetHeader("Authorization", "Bearer "+getToken(t))
+	content := client.RequestContent("POST", TestURL+urlPath, data...)
+	var respData gtoken.Resp
+	err := json.Unmarshal([]byte(content), &respData)
+	if err != nil {
+		t.Error("error:", err)
+	}
+	return respData
+}
+
+func getToken(t *testing.T) string {
+	if Token[Username] != "" {
+		return Token[Username]
+	}
+
+	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+
+		var respData gtoken.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if !respData.Success() {
+			t.Error("error:", "resp fail:"+respData.Json())
+		}
+
+		Token[Username] = respData.GetString("token")
+	}
+	return Token[Username]
 }

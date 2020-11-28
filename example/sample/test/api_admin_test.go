@@ -9,39 +9,18 @@ import (
 )
 
 const (
-	TestURL string = "http://127.0.0.1:8082"
+	TestAdminURL string = "http://127.0.0.1:8081/admin"
 )
 
 var (
-	Token    = g.MapStrStr{}
-	Username = "flyfox"
+	TokenAdmin    = g.MapStrStr{}
+	AdminUsername = "flyfox"
 )
 
-func TestHello(t *testing.T) {
-	t.Log("visit hello and no auth")
-	if r, e := ghttp.Post(TestURL+"/hello", "username="+Username); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
-
-		content := string(r.ReadAll())
-		t.Log(content)
-
-		var respData gtoken.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-		if !respData.Success() {
-			t.Error("error:", respData.Json())
-		}
-	}
-}
-
-func TestSystemUser(t *testing.T) {
+func TestAdminSystemUser(t *testing.T) {
 	// 未登录
 	t.Log("1. not login and visit user")
-	if r, e := ghttp.Post(TestURL+"/system/user", "username="+Username); e != nil {
+	if r, e := ghttp.Post(TestAdminURL+"/system/user", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -61,7 +40,7 @@ func TestSystemUser(t *testing.T) {
 
 	// 登录，访问用户信息
 	t.Log("2. execute login and visit user")
-	data := Post(t, "/system/user", "username="+Username)
+	data := PostAdmin(t, "/system/user", "username="+AdminUsername)
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
@@ -70,7 +49,7 @@ func TestSystemUser(t *testing.T) {
 
 	// 登出
 	t.Log("3. execute logout")
-	data = Post(t, "/user/logout", "username="+Username)
+	data = PostAdmin(t, "/user/logout", "username="+AdminUsername)
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
@@ -79,7 +58,7 @@ func TestSystemUser(t *testing.T) {
 
 	// 登出访问用户信息
 	t.Log("4. visit user")
-	data = Post(t, "/system/user", "username="+Username)
+	data = PostAdmin(t, "/system/user", "username="+AdminUsername)
 	if data.Success() {
 		t.Error("error:", data.Json())
 	} else {
@@ -87,10 +66,10 @@ func TestSystemUser(t *testing.T) {
 	}
 }
 
-func TestUserLoginFail(t *testing.T) {
+func TestAdminUserLoginFail(t *testing.T) {
 	// 登录失败
 	t.Log("1. login fail ")
-	if r, e := ghttp.Post(TestURL+"/login", "username=&passwd="); e != nil {
+	if r, e := ghttp.Post(TestAdminURL+"/login", "username=&passwd="); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -110,10 +89,10 @@ func TestUserLoginFail(t *testing.T) {
 
 }
 
-func TestExclude(t *testing.T) {
+func TestAdminExclude(t *testing.T) {
 	// 未登录可以访问
 	t.Log("1. exclude user info")
-	if r, e := ghttp.Post(TestURL+"/system/user/info", "username="+Username); e != nil {
+	if r, e := ghttp.Post(TestAdminURL+"/system/user/info", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -131,7 +110,7 @@ func TestExclude(t *testing.T) {
 		}
 	}
 
-	if r, e := ghttp.Post(TestURL+"/user/info", "username="+Username); e != nil {
+	if r, e := ghttp.Post(TestAdminURL+"/user/info", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -151,100 +130,37 @@ func TestExclude(t *testing.T) {
 
 }
 
-//func TestRefresh(t *testing.T) {
-//	// 登录，访问用户信息
-//	t.Log("1. execute login and visit user")
-//	data := Post(t, "/system/user", "username="+Username)
-//	if data.Success() {
-//		t.Log(data.Json())
-//	} else {
-//		t.Error("error:", data.Json())
-//	}
-//
-//	for i := 1; i < 9; i++ {
-//		time.Sleep(2 * time.Second)
-//		// 登录，访问用户信息
-//		t.Log("1. execute login and visit user")
-//		data = Post(t, "/system/user", "username="+Username)
-//		if data.Success() {
-//			t.Log(data.Json())
-//		} else {
-//			t.Error("error:", data.Json())
-//		}
-//	}
-//
-//}
-
-func TestLogin(t *testing.T) {
-	Username = "testLogin"
+func TestAdminLogin(t *testing.T) {
+	AdminUsername = "testLogin"
 	t.Log(" login first ")
-	token1 := getToken(t)
+	token1 := getAdminToken(t)
 	t.Log("token:" + token1)
 	t.Log(" login second and same token ")
-	token2 := getToken(t)
+	token2 := getAdminToken(t)
 	t.Log("token:" + token2)
 	if token1 != token2 {
 		t.Error("error:", "token not same ")
 	}
-	Username = "flyfox"
+	AdminUsername = "flyfox"
 }
 
-func TestLogout(t *testing.T) {
-	Username = "testLogout"
+func TestAdminLogout(t *testing.T) {
+	AdminUsername = "testLogout"
 	t.Log(" logout test ")
-	data := Post(t, "/user/logout", "username="+Username)
+	data := PostAdmin(t, "/user/logout", "username="+AdminUsername)
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
 		t.Error("error:", data.Json())
 	}
-	Username = "flyfox"
+	AdminUsername = "flyfox"
 }
 
-func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
-	client := ghttp.NewClient()
-	client.SetHeader("Authorization", "Bearer "+getToken(t))
-	content := client.RequestContent("POST", TestURL+urlPath, data...)
-	var respData gtoken.Resp
-	err := json.Unmarshal([]byte(content), &respData)
-	if err != nil {
-		t.Error("error:", err)
-	}
-	return respData
-}
-
-func getToken(t *testing.T) string {
-	if Token[Username] != "" {
-		return Token[Username]
-	}
-
-	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
-
-		content := string(r.ReadAll())
-
-		var respData gtoken.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-
-		if !respData.Success() {
-			t.Error("error:", "resp fail:"+respData.Json())
-		}
-
-		Token[Username] = respData.GetString("token")
-	}
-	return Token[Username]
-}
-
-func TestMultiLogin(t *testing.T) {
-	Username = "testLogin"
+func TestAdminMultiLogin(t *testing.T) {
+	AdminUsername = "testLogin"
 	t.Log(" TestMultiLogin start... ")
 	var token1, token2 string
-	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+	if r, e := ghttp.Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -266,7 +182,7 @@ func TestMultiLogin(t *testing.T) {
 	}
 	t.Log("token1:" + token1)
 
-	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+	if r, e := ghttp.Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -299,5 +215,44 @@ func TestMultiLogin(t *testing.T) {
 		}
 	}
 
-	Username = "flyfox"
+	AdminUsername = "flyfox"
+}
+
+func PostAdmin(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
+	client := ghttp.NewClient()
+	client.SetHeader("Authorization", "Bearer "+getAdminToken(t))
+	content := client.RequestContent("POST", TestAdminURL+urlPath, data...)
+	var respData gtoken.Resp
+	err := json.Unmarshal([]byte(content), &respData)
+	if err != nil {
+		t.Error("error:", err)
+	}
+	return respData
+}
+
+func getAdminToken(t *testing.T) string {
+	if TokenAdmin[AdminUsername] != "" {
+		return TokenAdmin[AdminUsername]
+	}
+
+	if r, e := ghttp.Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+
+		var respData gtoken.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if !respData.Success() {
+			t.Error("error:", "resp fail:"+respData.Json())
+		}
+
+		TokenAdmin[AdminUsername] = respData.GetString("token")
+	}
+	return TokenAdmin[AdminUsername]
 }
