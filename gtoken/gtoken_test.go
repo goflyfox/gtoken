@@ -161,7 +161,7 @@ func authPath(gfToken *gtoken.GfToken, t *testing.T) {
 func TestEncryptDecryptToken(t *testing.T) {
 	t.Log("encrypt and decrypt token test ")
 	gfToken := gtoken.GfToken{}
-	gfToken.Init()
+	gfToken.InitConfig()
 
 	userKey := "123123"
 	token := gfToken.EncryptToken(userKey, "")
@@ -187,7 +187,7 @@ func TestEncryptDecryptToken(t *testing.T) {
 func BenchmarkEncryptDecryptToken(b *testing.B) {
 	b.Log("encrypt and decrypt token test ")
 	gfToken := gtoken.GfToken{}
-	gfToken.Init()
+	gfToken.InitConfig()
 
 	userKey := "123123"
 	token := gfToken.EncryptToken(userKey, "")

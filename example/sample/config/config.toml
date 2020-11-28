@@ -11,5 +11,5 @@
 
 # Redis数据库配置
 [redis]
-  default = "127.0.0.1:16379,0,soccer"
-  cache   = "127.0.0.1:16379,1,soccer?idleTimeout=600"
+    default = "127.0.0.1:16379,0,soccer"
+    cache   = "127.0.0.1:16379,1,soccer?idleTimeout=600"

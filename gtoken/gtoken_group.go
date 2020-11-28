@@ -7,7 +7,7 @@ import (
 
 // 绑定group
 func (m *GfToken) Middleware(group *ghttp.RouterGroup) bool {
-	if !m.Init() {
+	if !m.InitConfig() {
 		return false
 	}
 	// 设置为Group模式

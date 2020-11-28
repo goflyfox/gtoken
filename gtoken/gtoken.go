@@ -72,8 +72,8 @@ type GfToken struct {
 	AuthAfterFunc func(r *ghttp.Request, respData Resp)
 }
 
-// Init 初始化
-func (m *GfToken) Init() bool {
+// InitConfig 初始化配置信息
+func (m *GfToken) InitConfig() bool {
 	if m.CacheMode == 0 {
 		m.CacheMode = CacheModeCache
 	}
@@ -180,7 +180,7 @@ func (m *GfToken) Init() bool {
 
 // Start 启动
 func (m *GfToken) Start() bool {
-	if !m.Init() {
+	if !m.InitConfig() {
 		return false
 	}
 	glog.Info("[GToken][params:" + m.String() + "]start... ")

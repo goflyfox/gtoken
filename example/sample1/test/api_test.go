@@ -289,7 +289,7 @@ func TestMultiLogin(t *testing.T) {
 
 	t.Log("token2:" + token2)
 
-	if g.Config().GetBool("gtoken.multi-login") {
+	if g.Config().GetBool("gToken.MultiLogin") {
 		if token1 != token2 {
 			t.Error("error:", "token not same ")
 		}
