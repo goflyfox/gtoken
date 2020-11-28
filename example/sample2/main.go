@@ -14,7 +14,7 @@ var TestServerName string
 func main() {
 	glog.Info("########service start...")
 
-	g.Cfg().SetPath("example/sample1")
+	g.Cfg().SetPath("example/sample2")
 	s := g.Server(TestServerName)
 	initRouter(s)
 
@@ -28,6 +28,7 @@ var gfToken *gtoken.GfToken
 统一路由注册
 */
 func initRouter(s *ghttp.Server) {
+	// 不认证接口
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
 
@@ -35,6 +36,25 @@ func initRouter(s *ghttp.Server) {
 		group.ALL("/hello", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("hello"))
 		})
+	})
+
+	// 认证接口
+	loginFunc := Login
+	// 启动gtoken
+	gfToken := &gtoken.GfToken{
+		ServerName: TestServerName,
+		//Timeout:         10 * 1000,
+		CacheMode:        g.Config().GetInt8("gtoken.cache-mode"),
+		LoginPath:        "/login",
+		LoginBeforeFunc:  loginFunc,
+		LogoutPath:       "/user/logout",
+		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
+		MultiLogin:       g.Config().GetBool("gtoken.multi-login"),
+	}
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(CORS)
+		gfToken.Middleware(group)
+
 		group.ALL("/system/user", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("system user"))
 		})
@@ -46,21 +66,6 @@ func initRouter(s *ghttp.Server) {
 		})
 	})
 
-	loginFunc := Login
-	// 启动gtoken
-	gfToken := &gtoken.GfToken{
-		ServerName: TestServerName,
-		//Timeout:         10 * 1000,
-		CacheMode:        g.Config().GetInt8("gtoken.cache-mode"),
-		LoginPath:        "/login",
-		LoginBeforeFunc:  loginFunc,
-		LogoutPath:       "/user/logout",
-		AuthPaths:        g.SliceStr{"/user", "/system"},                // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
-		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
-		GlobalMiddleware: true,                                          // 开启全局拦截
-		MultiLogin:       g.Config().GetBool("gtoken.multi-login"),
-	}
-	gfToken.Start()
 }
 
 func Login(r *ghttp.Request) (string, interface{}) {

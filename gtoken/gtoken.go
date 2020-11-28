@@ -18,6 +18,10 @@ import (
 const (
 	CacheModeCache = 1
 	CacheModeRedis = 2
+
+	MiddlewareTypeGroup  = 1
+	MiddlewareTypeBind   = 2
+	MiddlewareTypeGlobal = 3
 )
 
 // GfToken gtoken结构体
@@ -40,8 +44,10 @@ type GfToken struct {
 	AuthFailMsg string
 	// 是否支持多端登录，默认false
 	MultiLogin bool
-	// 是否是全局认证
+	// 是否是全局认证，兼容历史版本，已废弃
 	GlobalMiddleware bool
+	// 中间件类型 1 GroupMiddleware 2 BindMiddleware  3 GlobalMiddleware
+	MiddlewareType uint
 
 	// 登录路径
 	LoginPath string
@@ -94,6 +100,15 @@ func (m *GfToken) Init() bool {
 
 	if m.AuthFailMsg == "" {
 		m.AuthFailMsg = "请求错误或登录超时"
+	}
+
+	// 设置中间件模式，未设置说明历史版本，通过GlobalMiddleware兼容
+	if m.MiddlewareType == 0 {
+		if m.GlobalMiddleware {
+			m.MiddlewareType = MiddlewareTypeGlobal
+		} else {
+			m.MiddlewareType = MiddlewareTypeBind
+		}
 	}
 
 	if m.LoginAfterFunc == nil {
@@ -185,7 +200,7 @@ func (m *GfToken) Start() bool {
 	}
 
 	// 是否是全局拦截
-	if m.GlobalMiddleware {
+	if m.MiddlewareType == MiddlewareTypeGlobal {
 		s.BindMiddlewareDefault(m.AuthMiddleware)
 	} else {
 		for _, authPath := range m.AuthPaths {
@@ -302,9 +317,15 @@ func (m *GfToken) AuthPath(urlPath string) bool {
 	if strings.HasSuffix(urlPath, "/") {
 		urlPath = gstr.SubStr(urlPath, 0, len(urlPath)-1)
 	}
+	// 分组拦截，登录接口不拦截
+	if m.MiddlewareType == MiddlewareTypeGroup {
+		if gstr.HasSuffix(urlPath, m.LoginPath) {
+			return false
+		}
+	}
 
 	// 全局处理，认证路径拦截处理
-	if m.GlobalMiddleware {
+	if m.MiddlewareType == MiddlewareTypeGlobal {
 		var authFlag bool
 		for _, authPath := range m.AuthPaths {
 			tmpPath := authPath
@@ -528,7 +549,7 @@ func (m *GfToken) String() string {
 		"EncryptKey":       string(m.EncryptKey),
 		"AuthFailMsg":      m.AuthFailMsg,
 		"MultiLogin":       m.MultiLogin,
-		"GlobalMiddleware": m.GlobalMiddleware,
+		"MiddlewareType":   m.MiddlewareType,
 		"LoginPath":        m.LoginPath,
 		"LogoutPath":       m.LogoutPath,
 		"AuthPaths":        gconv.String(m.AuthPaths),
