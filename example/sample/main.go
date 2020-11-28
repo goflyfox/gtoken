@@ -42,14 +42,11 @@ func initRouter(s *ghttp.Server) {
 	loginFunc := Login
 	// 启动gtoken
 	gfToken := &gtoken.GfToken{
-		ServerName: TestServerName,
-		//Timeout:         10 * 1000,
-		CacheMode:        g.Config().GetInt8("gtoken.cache-mode"),
+		ServerName:       TestServerName,
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
-		MultiLogin:       g.Config().GetBool("gtoken.multi-login"),
 	}
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)

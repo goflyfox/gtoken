@@ -51,14 +51,20 @@ func initRouter(s *ghttp.Server) {
 	gfToken := &gtoken.GfToken{
 		ServerName: TestServerName,
 		//Timeout:         10 * 1000,
-		CacheMode:        g.Config().GetInt8("gtoken.cache-mode"),
+		CacheMode:        g.Cfg().GetInt8("gToken.CacheMode"),
+		CacheKey:         g.Cfg().GetString("gToken.CacheKey"),
+		Timeout:          g.Cfg().GetInt("gToken.Timeout"),
+		MaxRefresh:       g.Cfg().GetInt("gToken.MaxRefresh"),
+		TokenDelimiter:   g.Cfg().GetString("gToken.TokenDelimiter"),
+		EncryptKey:       g.Cfg().GetBytes("gToken.EncryptKey"),
+		AuthFailMsg:      g.Cfg().GetString("gToken.AuthFailMsg"),
+		MultiLogin:       g.Config().GetBool("gToken.MultiLogin"),
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
 		AuthPaths:        g.SliceStr{"/user", "/system"},                // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
 		GlobalMiddleware: true,                                          // 开启全局拦截
-		MultiLogin:       g.Config().GetBool("gtoken.multi-login"),
 	}
 	gfToken.Start()
 }

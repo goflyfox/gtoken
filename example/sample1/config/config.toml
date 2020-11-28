@@ -9,6 +9,17 @@
     # 是否支持多端登录
     multi-login = true
 
+#jwt配置
+[gToken]
+    CacheMode = 1
+    CacheKey = "GToken:"
+    Timeout = 0
+    MaxRefresh = 0
+    TokenDelimiter="_"
+    EncryptKey = "koi29a83idakguqjq29asd9asd8a7jhq"
+    AuthFailMsg = "登录超时，请重新登录"
+    MultiLogin = true
+
 # Redis数据库配置
 [redis]
   default = "127.0.0.1:16379,0,soccer"
