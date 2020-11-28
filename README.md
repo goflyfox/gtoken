@@ -1,31 +1,7 @@
 # gtoken
 
 ## 介绍
-基于gf框架的token插件，通过服务端验证方式实现token认证；已完全可以支撑线上token认证，并支持集群模式；使用简单，大家可以放心使用；
-
-1. 支持单机gcache和集群gredis模式；
-```
-# 配置文件
-# 缓存模式 1 gcache 2 gredis
-cache-mode = 2
-```
-
-2. 支持简单token认证
-3. 加入缓存自动续期功能
-```
-// 注：通过MaxRefresh，默认当用户第五天访问时，自动再进行五天续期
-// 超时时间 默认10天
-Timeout int
-// 缓存刷新时间 默认为超时时间的一半
-MaxRefresh int
-```
-4. 支持全局拦截或者深度路径拦截，便于根据个人需求定制拦截器
-```
-// 是否是全局认证
-GlobalMiddleware bool
-```
-
-5. 框架使用简单，只需要设置登录验证方法以及登录、登出、拦截路径即可；
+基于`GoFrame`框架的token插件，通过服务端验证方式实现token认证；已完全可以支撑线上token认证，通过Redis支持集群模式；使用简单，大家可以放心使用；
 
 * github地址：https://github.com/goflyfox/gtoken
 * gitee地址：https://gitee.com/goflyfox/gtoken
@@ -36,6 +12,28 @@ GlobalMiddleware bool
 3. 用户扩展信息仍存储在服务端，可有效的减少传输空间；
 4. gtoken支撑单点应用使用内存存储，也支持集群使用redis存储；
 5. 支持缓存自动续期，并且不需要客户端进行实现；
+
+## 特性说明
+
+1. 支持单机gcache和集群gredis模式；
+```
+# 配置文件
+# 缓存模式 1 gcache 2 gredis
+cache-mode = 2
+```
+
+2. 支持简单token认证
+3. 支持服务端缓存自动续期功能
+```
+// 注：通过MaxRefresh，默认当用户第五天访问时，自动再进行五天续期
+// 超时时间 默认10天
+Timeout int
+// 缓存刷新时间 默认为超时时间的一半
+MaxRefresh int
+```
+4. 支持分组拦截、全局拦截、深度路径拦截，便于根据个人需求定制拦截器；建议使用分组拦截方式；
+
+5. 框架使用简单，只需要设置登录验证方法以及登录、登出路径即可；
 
 ## 安装教程
 
