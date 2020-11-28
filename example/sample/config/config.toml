@@ -3,11 +3,11 @@
     ServerAgent    = "gtoken-demo"
     LogPath        = "./example/sample1/logs"
 
-[gtoken]
+[gToken]
     # 缓存模式 1 gcache 2 gredis
-    cache-mode = 1
+    CacheMode = 1
     # 是否支持多端登录
-    multi-login = true
+    MultiLogin = true
 
 # Redis数据库配置
 [redis]

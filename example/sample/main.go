@@ -47,6 +47,7 @@ func initRouter(s *ghttp.Server) {
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
+		MultiLogin:       g.Config().GetBool("gToken.MultiLogin"),
 	}
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
@@ -67,12 +68,11 @@ func initRouter(s *ghttp.Server) {
 	gfAdminToken := &gtoken.GfToken{
 		ServerName: TestServerName,
 		//Timeout:         10 * 1000,
-		CacheMode:        g.Config().GetInt8("gtoken.cache-mode"),
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
 		AuthExcludePaths: g.SliceStr{"/admin/user/info", "/admin/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
-		MultiLogin:       g.Config().GetBool("gtoken.multi-login"),
+		MultiLogin:       g.Config().GetBool("gToken.MultiLogin"),
 	}
 	s.Group("/admin", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)

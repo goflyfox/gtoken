@@ -201,14 +201,14 @@ func (m *GfToken) Start() bool {
 
 	// 是否是全局拦截
 	if m.MiddlewareType == MiddlewareTypeGlobal {
-		s.BindMiddlewareDefault(m.AuthMiddleware)
+		s.BindMiddlewareDefault(m.authMiddleware)
 	} else {
 		for _, authPath := range m.AuthPaths {
 			tmpPath := authPath
 			if !strings.HasSuffix(authPath, "/*") {
 				tmpPath += "/*"
 			}
-			s.BindMiddleware(tmpPath, m.AuthMiddleware)
+			s.BindMiddleware(tmpPath, m.authMiddleware)
 		}
 	}
 
@@ -285,7 +285,7 @@ func (m *GfToken) Logout(r *ghttp.Request) {
 }
 
 // AuthMiddleware 认证拦截
-func (m *GfToken) AuthMiddleware(r *ghttp.Request) {
+func (m *GfToken) authMiddleware(r *ghttp.Request) {
 	urlPath := r.URL.Path
 	if !m.AuthPath(urlPath) {
 		// 如果不需要认证，继续

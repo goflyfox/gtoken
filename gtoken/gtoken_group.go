@@ -30,7 +30,7 @@ func (m *GfToken) Middleware(group *ghttp.RouterGroup) bool {
 		return false
 	}
 
-	group.Middleware(m.AuthMiddleware)
+	group.Middleware(m.authMiddleware)
 	group.ALL(m.LoginPath, m.Login)
 	group.ALL(m.LogoutPath, m.Logout)
 
