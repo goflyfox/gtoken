@@ -7,34 +7,65 @@ import (
 )
 
 func TestAuthPathGlobal(t *testing.T) {
-	t.Log("auth path test ")
+	t.Log("Global auth path test ")
 	// 启动gtoken
 	gfToken := &gtoken.GfToken{
 		//Timeout:         10 * 1000,
 		AuthPaths:        g.SliceStr{"/user", "/system"},             // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
-		GlobalMiddleware: true,                                       // 开启全局拦截
+		MiddlewareType:   gtoken.MiddlewareTypeGlobal,                // 开启全局拦截
 	}
 
 	authPath(gfToken, t)
 	flag := gfToken.AuthPath("/test")
 	if flag {
-		t.Error("/test auth path error")
+		t.Error("error:", "/test auth path error")
 	}
 
 }
 
-func TestAuthPath(t *testing.T) {
-	t.Log("auth path test ")
+func TestBindAuthPath(t *testing.T) {
+	t.Log("Bind auth path test ")
 	// 启动gtoken
 	gfToken := &gtoken.GfToken{
 		//Timeout:         10 * 1000,
 		AuthPaths:        g.SliceStr{"/user", "/system"},             // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
-		GlobalMiddleware: false,                                      // 关闭全局拦截
+		MiddlewareType:   gtoken.MiddlewareTypeBind,                  // 关闭全局拦截
 	}
 
 	authPath(gfToken, t)
+}
+
+func TestGroupAuthPath(t *testing.T) {
+	t.Log("Group auth path test ")
+	// 启动gtoken
+	gfToken := &gtoken.GfToken{
+		//Timeout:         10 * 1000,
+		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
+		LoginPath:        "/login",                                   // 登录路径
+		MiddlewareType:   gtoken.MiddlewareTypeGroup,                 // 关闭全局拦截
+	}
+
+	flag := gfToken.AuthPath("/login")
+	if flag {
+		t.Error("error:", "/login auth path error")
+	}
+
+	flag = gfToken.AuthPath("/user/info")
+	if flag {
+		t.Error("error:", "/user/info auth path error")
+	}
+
+	flag = gfToken.AuthPath("/system/user/info")
+	if flag {
+		t.Error("error:", "/system/user/info auth path error")
+	}
+
+	flag = gfToken.AuthPath("/system/test")
+	if !flag {
+		t.Error("error:", "/system/test auth path error")
+	}
 }
 
 func TestAuthPathNoExclude(t *testing.T) {
@@ -42,24 +73,24 @@ func TestAuthPathNoExclude(t *testing.T) {
 	// 启动gtoken
 	gfToken := &gtoken.GfToken{
 		//Timeout:         10 * 1000,
-		AuthPaths:        g.SliceStr{"/user", "/system"}, // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
-		GlobalMiddleware: true,                           // 关闭全局拦截
+		AuthPaths:      g.SliceStr{"/user", "/system"}, // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
+		MiddlewareType: gtoken.MiddlewareTypeGlobal,    // 关闭全局拦截
 	}
 
 	authFlag := gfToken.AuthPath
 	if authFlag("/test") {
-		t.Error("/test auth path error")
+		t.Error("error:", "/test auth path error")
 	}
 	if !authFlag("/system/dept") {
-		t.Error("/system/dept auth path error")
+		t.Error("error:", "/system/dept auth path error")
 	}
 
 	if !authFlag("/user/info") {
-		t.Error("/user/info auth path error")
+		t.Error("error:", "/user/info auth path error")
 	}
 
 	if !authFlag("/system/user") {
-		t.Error("/system/user auth path error")
+		t.Error("error:", "/system/user auth path error")
 	}
 }
 
@@ -70,27 +101,27 @@ func TestAuthPathExclude(t *testing.T) {
 		//Timeout:         10 * 1000,
 		AuthPaths:        g.SliceStr{"/*"},                           // 这里是按照前缀拦截，拦截/user /user/list /user/add ...
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/*"}, // 不拦截路径  /user/info,/system/user/info,/system/user,
-		GlobalMiddleware: true,                                       // 开启全局拦截
+		MiddlewareType:   gtoken.MiddlewareTypeGlobal,                // 开启全局拦截
 	}
 
 	authFlag := gfToken.AuthPath
 	if !authFlag("/test") {
-		t.Error("/test auth path error")
+		t.Error("error:", "/test auth path error")
 	}
 	if !authFlag("//system/dept") {
-		t.Error("/system/dept auth path error")
+		t.Error("error:", "/system/dept auth path error")
 	}
 
 	if authFlag("/user/info") {
-		t.Error("/user/info auth path error")
+		t.Error("error:", "/user/info auth path error")
 	}
 
 	if authFlag("/system/user") {
-		t.Error("/system/user auth path error")
+		t.Error("error:", "/system/user auth path error")
 	}
 
 	if authFlag("/system/user/info") {
-		t.Error("/system/user/info auth path error")
+		t.Error("error:", "/system/user/info auth path error")
 	}
 
 }
@@ -98,32 +129,32 @@ func TestAuthPathExclude(t *testing.T) {
 func authPath(gfToken *gtoken.GfToken, t *testing.T) {
 	flag := gfToken.AuthPath("/user/info")
 	if flag {
-		t.Error("/user/info auth path error")
+		t.Error("error:", "/user/info auth path error")
 	}
 
 	flag = gfToken.AuthPath("/system/user")
 	if flag {
-		t.Error("/system/user auth path error")
+		t.Error("error:", "/system/user auth path error")
 	}
 
 	flag = gfToken.AuthPath("/system/user/info")
 	if flag {
-		t.Error("/system/user/info auth path error")
+		t.Error("error:", "/system/user/info auth path error")
 	}
 
 	flag = gfToken.AuthPath("/system/dept")
 	if !flag {
-		t.Error("/system/dept auth path error")
+		t.Error("error:", "/system/dept auth path error")
 	}
 
 	flag = gfToken.AuthPath("/user/list")
 	if !flag {
-		t.Error("/user/list auth path error")
+		t.Error("error:", "/user/list auth path error")
 	}
 
 	flag = gfToken.AuthPath("/user/add")
 	if !flag {
-		t.Error("/user/add auth path error")
+		t.Error("error:", "/user/add auth path error")
 	}
 }
 
@@ -145,10 +176,10 @@ func TestEncryptDecryptToken(t *testing.T) {
 	}
 	t.Log(token2.DataString())
 	if userKey != token2.GetString("userKey") {
-		t.Error("token decrypt userKey error")
+		t.Error("error:", "token decrypt userKey error")
 	}
 	if token.GetString("uuid") != token2.GetString("uuid") {
-		t.Error("token decrypt uuid error")
+		t.Error("error:", "token decrypt uuid error")
 	}
 
 }
@@ -172,10 +203,10 @@ func BenchmarkEncryptDecryptToken(b *testing.B) {
 		}
 		b.Log(token2.DataString())
 		if userKey != token2.GetString("userKey") {
-			b.Error("token decrypt userKey error")
+			b.Error("error:", "token decrypt userKey error")
 		}
 		if token.GetString("uuid") != token2.GetString("uuid") {
-			b.Error("token decrypt uuid error")
+			b.Error("error:", "token decrypt uuid error")
 		}
 	}
 
