@@ -56,6 +56,9 @@ func initRouter(s *ghttp.Server) {
 		group.ALL("/system/user", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("system user"))
 		})
+		group.ALL("/user/data", func(r *ghttp.Request) {
+			r.Response.WriteJson(gfToken.GetTokenData(r))
+		})
 		group.ALL("/user/info", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("user info"))
 		})

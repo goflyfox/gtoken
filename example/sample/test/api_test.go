@@ -61,7 +61,16 @@ func TestSystemUser(t *testing.T) {
 
 	// 登录，访问用户信息
 	t.Log("2. execute login and visit user")
-	data := Post(t, "/system/user", "username="+Username)
+	data := Post(t, "/system/user")
+	if data.Success() {
+		t.Log(data.Json())
+	} else {
+		t.Error("error:", data.Json())
+	}
+
+	// 登录，获取用户信息
+	t.Log("2. execute get user data")
+	data = Post(t, "/user/data")
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
@@ -70,7 +79,7 @@ func TestSystemUser(t *testing.T) {
 
 	// 登出
 	t.Log("3. execute logout")
-	data = Post(t, "/user/logout", "username="+Username)
+	data = Post(t, "/user/logout")
 	if data.Success() {
 		t.Log(data.Json())
 	} else {
