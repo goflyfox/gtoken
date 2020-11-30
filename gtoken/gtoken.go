@@ -319,7 +319,8 @@ func (m *GfToken) AuthPath(urlPath string) bool {
 	}
 	// 分组拦截，登录接口不拦截
 	if m.MiddlewareType == MiddlewareTypeGroup {
-		if gstr.HasSuffix(urlPath, m.LoginPath) {
+		if gstr.HasSuffix(urlPath, m.LoginPath) ||
+			gstr.HasSuffix(urlPath, m.LogoutPath) {
 			return false
 		}
 	}

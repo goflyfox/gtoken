@@ -92,7 +92,7 @@ func Login(r *ghttp.Request) (string, interface{}) {
 
 1. 分组中间件实现，不需要设置`AuthPaths`认证路径，设置也没有作用，**需要认证路径为该分组下所有路由**；
 2. 使用分组拦截的是通过GoFrame的`group.Middleware(authMiddleware)`方法，对该分组下的所有路由进行拦截；
-3. 对登录接口路径`loginPath`做拦截认证放行；
+3. 对登录接口路径`loginPath`和登出接口路径`logoutPath`做拦截认证放行，登出放行是为了避免认证过期无法登出情况；
 4. 严格按照GoFrame分组中间件拦截优先级；如果使用跨域中间件，建议放在跨域中间件之后；
 5. 如果配置`AuthExcludePaths`路径，会将配置的不拦截路径排除；
 
