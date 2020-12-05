@@ -1,5 +1,8 @@
 Change Log 更新说明
 ------------------------------
+## 2020-11-30 v1.4.1
+1. Group Middleware加入登出放行逻辑；
+
 ## 2020-11-29 v1.4.0
 1. 加入Group Middleware实现，契合官网推荐方式；
 2. 完美兼容历史Global Middleware版本；
