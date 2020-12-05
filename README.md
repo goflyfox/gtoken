@@ -54,7 +54,7 @@ GoFrame官方推荐使用Group方式实现路由和中间件；
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
 	}
-	s.Group("/", func(group *ghttp.RouterGroup) {
+	s.Group("/admin", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
 		gfToken.Middleware(group)
 
@@ -66,6 +66,8 @@ GoFrame官方推荐使用Group方式实现路由和中间件；
 ```
 
 登录方法实现，通过username返回空或者r.ExitAll()\r.Exit()处理认证失败；
+
+特别提示：**这里注册的路径严格按照GF group方式，所以注册的路径是`/admin/login`和`/admin/user/logout`**
 
 ```go
 func Login(r *ghttp.Request) (string, interface{}) {
