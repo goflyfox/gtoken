@@ -228,6 +228,10 @@ UNAUTHORIZED = -401  // 未认证
 | 认证验证方法     | AuthBeforeFunc   | 拦截认证前后调用                                        | 支持       | 支持       |
 | 认证返回方法     | AuthAfterFunc    | 拦截认证完成后调用                                      | 支持       | 支持       |
 
+## 文档
+
+https://itician.org/pages/viewpage.action?pageId=1115974
+
 ## 感谢
 
 1. gf框架 [https://github.com/gogf/gf](https://github.com/gogf/gf) 
