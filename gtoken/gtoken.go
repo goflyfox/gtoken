@@ -2,6 +2,8 @@ package gtoken
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/gogf/gf/crypto/gaes"
 	"github.com/gogf/gf/crypto/gmd5"
 	"github.com/gogf/gf/encoding/gbase64"
@@ -12,7 +14,6 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
-	"strings"
 )
 
 const (
@@ -49,6 +50,12 @@ type GfToken struct {
 	// 中间件类型 1 GroupMiddleware 2 BindMiddleware  3 GlobalMiddleware
 	MiddlewareType uint
 
+	// 注册路径
+	RegisterPath string
+	// 注册验证方法 return userKey 用户标识 如果userKey为空，结束执行
+	RegisterBeforeFunc func(r *ghttp.Request) (string, interface{})
+	// 注册返回方法
+	RegisterAfterFunc func(r *ghttp.Request, respData Resp)
 	// 登录路径
 	LoginPath string
 	// 登录验证方法 return userKey 用户标识 如果userKey为空，结束执行
@@ -166,7 +173,7 @@ func (m *GfToken) InitConfig() bool {
 
 				no := gconv.String(gtime.TimestampMilli())
 
-				glog.Info(fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
+				glog.Warning(fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
 					no, r.URL.Path, params, respData.Json()))
 				respData.Msg = m.AuthFailMsg
 				r.Response.WriteJson(respData)
@@ -212,6 +219,11 @@ func (m *GfToken) Start() bool {
 		}
 	}
 
+	// 注册
+	if m.RegisterPath != "" && m.RegisterAfterFunc != nil && m.RegisterBeforeFunc == nil {
+		s.BindHandler(m.RegisterPath, m.Register)
+	}
+
 	// 登录
 	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
 		glog.Error("[GToken]LoginPath or LoginBeforeFunc not set")
@@ -244,6 +256,19 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 	}
 
 	return respData
+}
+
+// Register 注册
+func (m *GfToken) Register(r *ghttp.Request) {
+	userKey, data := m.RegisterBeforeFunc(r)
+	if userKey == "" {
+		glog.Error("[GToken]Register userKey is empty")
+		return
+	}
+
+	// 生成token
+	respToken := m.genToken(userKey, data)
+	m.RegisterAfterFunc(r, respToken)
 }
 
 // Login 登录
@@ -319,7 +344,8 @@ func (m *GfToken) AuthPath(urlPath string) bool {
 	}
 	// 分组拦截，登录接口不拦截
 	if m.MiddlewareType == MiddlewareTypeGroup {
-		if gstr.HasSuffix(urlPath, m.LoginPath) {
+		if gstr.HasSuffix(urlPath, m.LoginPath) ||
+			gstr.HasSuffix(urlPath, m.LogoutPath) {
 			return false
 		}
 	}
