@@ -81,7 +81,7 @@ func Login(r *ghttp.Request) (string, interface{}) {
 		r.Response.WriteJson(gtoken.Fail("账号或密码错误."))
 		r.ExitAll()
 	}
-
+	// 唯一标识，扩展参数user data
 	return username, "1"
 }
 
