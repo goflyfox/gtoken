@@ -2,9 +2,12 @@ package test
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/goflyfox/gtoken/example/sample/test/server"
 	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"os"
 	"testing"
 )
 
@@ -16,6 +19,23 @@ var (
 	Token    = g.MapStrStr{}
 	Username = "flyFox"
 )
+
+func setup() {
+	fmt.Println("start...")
+	server.Start()
+}
+
+func teardown() {
+	server.Stop()
+	fmt.Println("stop.")
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	code := m.Run()
+	teardown()
+	os.Exit(code)
+}
 
 func TestHello(t *testing.T) {
 	t.Log("visit hello and no auth")
