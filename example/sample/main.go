@@ -23,6 +23,7 @@ func main() {
 }
 
 var gfToken *gtoken.GfToken
+var gfAdminToken *gtoken.GfToken
 
 /*
 统一路由注册
@@ -41,7 +42,7 @@ func initRouter(s *ghttp.Server) {
 	// 认证接口
 	loginFunc := Login
 	// 启动gtoken
-	gfToken := &gtoken.GfToken{
+	gfToken = &gtoken.GfToken{
 		ServerName:       TestServerName,
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
@@ -68,7 +69,7 @@ func initRouter(s *ghttp.Server) {
 	})
 
 	// 启动gtoken
-	gfAdminToken := &gtoken.GfToken{
+	gfAdminToken = &gtoken.GfToken{
 		ServerName: TestServerName,
 		//Timeout:         10 * 1000,
 		LoginPath:        "/login",

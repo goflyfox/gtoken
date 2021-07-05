@@ -38,6 +38,31 @@ func TestHello(t *testing.T) {
 	}
 }
 
+func TestUserData(t *testing.T) {
+	// 登录，访问用户信息
+	t.Log("2. execute login and visit user")
+	data := Post(t, "/system/data", "username="+Username)
+	if data.Success() {
+		if data.DataString() == "1" {
+			t.Log("get user data success", data.Json())
+		} else {
+			t.Error("user data not eq 1 ", data.Json())
+		}
+	} else {
+		t.Error("error:", data.Json())
+	}
+
+	// 登出
+	t.Log("3. execute logout")
+	data = Post(t, "/user/logout", "username="+Username)
+	if data.Success() {
+		t.Log(data.Json())
+	} else {
+		t.Error("error:", data.Json())
+	}
+
+}
+
 func TestSystemUser(t *testing.T) {
 	// 未登录
 	t.Log("1. not login and visit user")

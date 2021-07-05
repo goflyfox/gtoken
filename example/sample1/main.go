@@ -35,6 +35,10 @@ func initRouter(s *ghttp.Server) {
 		group.ALL("/hello", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("hello"))
 		})
+		// 获取登录扩展属性
+		group.ALL("/system/data", func(r *ghttp.Request) {
+			r.Response.WriteJson(gfToken.GetTokenData(r).Data)
+		})
 		group.ALL("/system/user", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("system user"))
 		})
@@ -48,7 +52,7 @@ func initRouter(s *ghttp.Server) {
 
 	loginFunc := Login
 	// 启动gtoken
-	gfToken := &gtoken.GfToken{
+	gfToken = &gtoken.GfToken{
 		ServerName: TestServerName,
 		//Timeout:         10 * 1000,
 		CacheMode:        g.Cfg().GetInt8("gToken.CacheMode"),
