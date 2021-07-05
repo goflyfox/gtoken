@@ -114,11 +114,17 @@ func (m *GfToken) InitConfig() bool {
 	if m.LoginAfterFunc == nil {
 		m.LoginAfterFunc = func(r *ghttp.Request, respData Resp) {
 			if !respData.Success() {
-				r.Response.WriteJson(respData)
+				err := r.Response.WriteJson(respData)
+				if err != nil {
+					glog.Error(err)
+				}
 			} else {
-				r.Response.WriteJson(Succ(g.Map{
+				err := r.Response.WriteJson(Succ(g.Map{
 					"token": respData.GetString("token"),
 				}))
+				if err != nil {
+					glog.Error(err)
+				}
 			}
 		}
 	}
@@ -132,9 +138,15 @@ func (m *GfToken) InitConfig() bool {
 	if m.LogoutAfterFunc == nil {
 		m.LogoutAfterFunc = func(r *ghttp.Request, respData Resp) {
 			if respData.Success() {
-				r.Response.WriteJson(Succ("Logout success"))
+				err := r.Response.WriteJson(Succ("Logout success"))
+				if err != nil {
+					glog.Error(err)
+				}
 			} else {
-				r.Response.WriteJson(respData)
+				err := r.Response.WriteJson(respData)
+				if err != nil {
+					glog.Error(err)
+				}
 			}
 		}
 	}
@@ -169,7 +181,10 @@ func (m *GfToken) InitConfig() bool {
 				glog.Warning(fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
 					no, r.URL.Path, params, respData.Json()))
 				respData.Msg = m.AuthFailMsg
-				r.Response.WriteJson(respData)
+				err := r.Response.WriteJson(respData)
+				if err != nil {
+					glog.Error(err)
+				}
 				r.ExitAll()
 			}
 		}
@@ -229,7 +244,7 @@ func (m *GfToken) Start() bool {
 	return true
 }
 
-// Start 结束
+// Stop 结束
 func (m *GfToken) Stop() bool {
 	glog.Info("[GToken]stop. ")
 	return true
@@ -310,7 +325,7 @@ func (m *GfToken) authMiddleware(r *ghttp.Request) {
 
 }
 
-// 判断路径是否需要进行认证拦截
+// AuthPath 判断路径是否需要进行认证拦截
 // return true 需要认证
 func (m *GfToken) AuthPath(urlPath string) bool {
 	// 去除后斜杠
@@ -469,7 +484,7 @@ func (m *GfToken) getToken(userKey string) Resp {
 	return Succ(userCache)
 }
 
-// removeToken 删除Token
+// RemoveToken 删除Token
 func (m *GfToken) RemoveToken(token string) Resp {
 	decryptToken := m.DecryptToken(token)
 	if !decryptToken.Success() {
@@ -522,7 +537,7 @@ func (m *GfToken) DecryptToken(token string) Resp {
 		glog.Error("[GToken]decode error", err)
 		return Error("decode error")
 	}
-	decryptToken, err2 := gaes.Decrypt([]byte(token64), m.EncryptKey)
+	decryptToken, err2 := gaes.Decrypt(token64, m.EncryptKey)
 	if err2 != nil {
 		glog.Error("[GToken]decrypt error", err2)
 		return Error("decrypt error")

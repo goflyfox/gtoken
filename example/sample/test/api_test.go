@@ -14,12 +14,12 @@ const (
 
 var (
 	Token    = g.MapStrStr{}
-	Username = "flyfox"
+	Username = "flyFox"
 )
 
 func TestHello(t *testing.T) {
 	t.Log("visit hello and no auth")
-	if r, e := ghttp.Post(TestURL+"/hello", "username="+Username); e != nil {
+	if r, e := g.Client().Post(TestURL+"/hello", "username="+Username); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -41,7 +41,7 @@ func TestHello(t *testing.T) {
 func TestSystemUser(t *testing.T) {
 	// 未登录
 	t.Log("1. not login and visit user")
-	if r, e := ghttp.Post(TestURL+"/system/user", "username="+Username); e != nil {
+	if r, e := g.Client().Post(TestURL+"/system/user", "username="+Username); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -94,12 +94,13 @@ func TestSystemUser(t *testing.T) {
 	} else {
 		t.Log(data.Json())
 	}
+	delete(Token, Username)
 }
 
 func TestUserLoginFail(t *testing.T) {
 	// 登录失败
 	t.Log("1. login fail ")
-	if r, e := ghttp.Post(TestURL+"/login", "username=&passwd="); e != nil {
+	if r, e := g.Client().Post(TestURL+"/login", "username=&passwd="); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -122,7 +123,7 @@ func TestUserLoginFail(t *testing.T) {
 func TestExclude(t *testing.T) {
 	// 未登录可以访问
 	t.Log("1. exclude user info")
-	if r, e := ghttp.Post(TestURL+"/system/user/info", "username="+Username); e != nil {
+	if r, e := g.Client().Post(TestURL+"/system/user/info", "username="+Username); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -140,7 +141,7 @@ func TestExclude(t *testing.T) {
 		}
 	}
 
-	if r, e := ghttp.Post(TestURL+"/user/info", "username="+Username); e != nil {
+	if r, e := g.Client().Post(TestURL+"/user/info", "username="+Username); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -185,7 +186,6 @@ func TestExclude(t *testing.T) {
 //}
 
 func TestLogin(t *testing.T) {
-	Username = "testLogin"
 	t.Log(" login first ")
 	token1 := getToken(t)
 	t.Log("token:" + token1)
@@ -195,11 +195,10 @@ func TestLogin(t *testing.T) {
 	if token1 != token2 {
 		t.Error("error:", "token not same ")
 	}
-	Username = "flyfox"
+	delete(Token, Username)
 }
 
 func TestLogout(t *testing.T) {
-	Username = "testLogout"
 	t.Log(" logout test ")
 	data := Post(t, "/user/logout", "username="+Username)
 	if data.Success() {
@@ -207,14 +206,13 @@ func TestLogout(t *testing.T) {
 	} else {
 		t.Error("error:", data.Json())
 	}
-	Username = "flyfox"
+	delete(Token, Username)
 }
 
 func TestMultiLogin(t *testing.T) {
-	Username = "testLogin"
 	t.Log(" TestMultiLogin start... ")
 	var token1, token2 string
-	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -236,7 +234,7 @@ func TestMultiLogin(t *testing.T) {
 	}
 	t.Log("token1:" + token1)
 
-	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -268,8 +266,6 @@ func TestMultiLogin(t *testing.T) {
 			t.Error("error:", "token same ")
 		}
 	}
-
-	Username = "flyfox"
 }
 
 func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
@@ -289,7 +285,7 @@ func getToken(t *testing.T) string {
 		return Token[Username]
 	}
 
-	if r, e := ghttp.Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()

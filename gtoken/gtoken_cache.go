@@ -72,7 +72,10 @@ func (m *GfToken) getCache(cacheKey string) Resp {
 func (m *GfToken) removeCache(cacheKey string) Resp {
 	switch m.CacheMode {
 	case CacheModeCache:
-		gcache.Remove(cacheKey)
+		_, err := gcache.Remove(cacheKey)
+		if err != nil {
+			glog.Error(err)
+		}
 	case CacheModeRedis:
 		var err error
 		_, err = g.Redis().Do("DEL", cacheKey)

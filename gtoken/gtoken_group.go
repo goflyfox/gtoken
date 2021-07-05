@@ -5,7 +5,7 @@ import (
 	"github.com/gogf/gf/os/glog"
 )
 
-// 绑定group
+// Middleware 绑定group
 func (m *GfToken) Middleware(group *ghttp.RouterGroup) bool {
 	if !m.InitConfig() {
 		return false

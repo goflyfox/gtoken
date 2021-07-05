@@ -14,13 +14,13 @@ const (
 
 var (
 	TokenAdmin    = g.MapStrStr{}
-	AdminUsername = "flyfox"
+	AdminUsername = "adminFlyFox"
 )
 
 func TestAdminSystemUser(t *testing.T) {
 	// 未登录
 	t.Log("1. not login and visit user")
-	if r, e := ghttp.Post(TestAdminURL+"/system/user", "username="+AdminUsername); e != nil {
+	if r, e := g.Client().Post(TestAdminURL+"/system/user", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -64,12 +64,13 @@ func TestAdminSystemUser(t *testing.T) {
 	} else {
 		t.Log(data.Json())
 	}
+	delete(TokenAdmin, AdminUsername)
 }
 
 func TestAdminUserLoginFail(t *testing.T) {
 	// 登录失败
 	t.Log("1. login fail ")
-	if r, e := ghttp.Post(TestAdminURL+"/login", "username=&passwd="); e != nil {
+	if r, e := g.Client().Post(TestAdminURL+"/login", "username=&passwd="); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -92,7 +93,7 @@ func TestAdminUserLoginFail(t *testing.T) {
 func TestAdminExclude(t *testing.T) {
 	// 未登录可以访问
 	t.Log("1. exclude user info")
-	if r, e := ghttp.Post(TestAdminURL+"/system/user/info", "username="+AdminUsername); e != nil {
+	if r, e := g.Client().Post(TestAdminURL+"/system/user/info", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -110,7 +111,7 @@ func TestAdminExclude(t *testing.T) {
 		}
 	}
 
-	if r, e := ghttp.Post(TestAdminURL+"/user/info", "username="+AdminUsername); e != nil {
+	if r, e := g.Client().Post(TestAdminURL+"/user/info", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -131,7 +132,6 @@ func TestAdminExclude(t *testing.T) {
 }
 
 func TestAdminLogin(t *testing.T) {
-	AdminUsername = "testLogin"
 	t.Log(" login first ")
 	token1 := getAdminToken(t)
 	t.Log("token:" + token1)
@@ -141,11 +141,10 @@ func TestAdminLogin(t *testing.T) {
 	if token1 != token2 {
 		t.Error("error:", "token not same ")
 	}
-	AdminUsername = "flyfox"
+	delete(TokenAdmin, AdminUsername)
 }
 
 func TestAdminLogout(t *testing.T) {
-	AdminUsername = "testLogout"
 	t.Log(" logout test ")
 	data := PostAdmin(t, "/user/logout", "username="+AdminUsername)
 	if data.Success() {
@@ -153,14 +152,13 @@ func TestAdminLogout(t *testing.T) {
 	} else {
 		t.Error("error:", data.Json())
 	}
-	AdminUsername = "flyfox"
+	delete(TokenAdmin, AdminUsername)
 }
 
 func TestAdminMultiLogin(t *testing.T) {
-	AdminUsername = "testLogin"
 	t.Log(" TestMultiLogin start... ")
 	var token1, token2 string
-	if r, e := ghttp.Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -182,7 +180,7 @@ func TestAdminMultiLogin(t *testing.T) {
 	}
 	t.Log("token1:" + token1)
 
-	if r, e := ghttp.Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -214,8 +212,7 @@ func TestAdminMultiLogin(t *testing.T) {
 			t.Error("error:", "token same ")
 		}
 	}
-
-	AdminUsername = "flyfox"
+	delete(TokenAdmin, AdminUsername)
 }
 
 func PostAdmin(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
@@ -235,7 +232,7 @@ func getAdminToken(t *testing.T) string {
 		return TokenAdmin[AdminUsername]
 	}
 
-	if r, e := ghttp.Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
