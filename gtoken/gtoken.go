@@ -515,7 +515,7 @@ func (m *GfToken) EncryptToken(userKey string, uuid string) Resp {
 
 	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)
 	if err != nil {
-		glog.Error("[GToken]encrypt error", err)
+		glog.Error("[GToken]encrypt error token:", tokenStr, err)
 		return Error("encrypt error")
 	}
 
@@ -534,17 +534,17 @@ func (m *GfToken) DecryptToken(token string) Resp {
 
 	token64, err := gbase64.Decode([]byte(token))
 	if err != nil {
-		glog.Error("[GToken]decode error", err)
+		glog.Error("[GToken]decode error token:", token, err)
 		return Error("decode error")
 	}
 	decryptToken, err2 := gaes.Decrypt(token64, m.EncryptKey)
 	if err2 != nil {
-		glog.Error("[GToken]decrypt error", err2)
+		glog.Error("[GToken]decrypt error token:", token, err2)
 		return Error("decrypt error")
 	}
 	tokenArray := gstr.Split(string(decryptToken), m.TokenDelimiter)
 	if len(tokenArray) < 2 {
-		glog.Error("[GToken]token len error")
+		glog.Error("[GToken]token len error token:", token)
 		return Error("token len error")
 	}
 
