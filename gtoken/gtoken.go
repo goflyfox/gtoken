@@ -522,7 +522,7 @@ func (m *GfToken) EncryptToken(userKey string, uuid string) Resp {
 	return Succ(g.Map{
 		"userKey": userKey,
 		"uuid":    uuid,
-		"token":   gbase64.Encode(token),
+		"token":   gbase64.EncodeToString(token),
 	})
 }
 
