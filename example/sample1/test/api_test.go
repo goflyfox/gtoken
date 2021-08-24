@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/goflyfox/gtoken/example/sample1/test/server1"
 	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -20,11 +21,13 @@ var (
 )
 
 func setup() {
-	fmt.Println("Before all tests")
+	fmt.Println("start...")
+	server1.Start()
 }
 
 func teardown() {
-	fmt.Println("After all tests")
+	server1.Stop()
+	fmt.Println("stop.")
 }
 
 func TestMain(m *testing.M) {
