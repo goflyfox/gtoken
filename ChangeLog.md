@@ -4,7 +4,6 @@ Change Log 更新说明
 1. gf升级为v1.16.5,没有兼容性问题,可以继续使用v1.4.2
 2. 处理json转换[]byte打印base64问题
 
-update gf v1.16.5 and token []byte to string
 ## 2021-07-05 v1.4.2
 1. gf升级为v1.16.4
 2. 完善测试用例，加入获取userdata测试用例
