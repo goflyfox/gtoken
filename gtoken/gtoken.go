@@ -332,10 +332,10 @@ func (m *GfToken) AuthPath(urlPath string) bool {
 	if strings.HasSuffix(urlPath, "/") {
 		urlPath = gstr.SubStr(urlPath, 0, len(urlPath)-1)
 	}
-	// 分组拦截，登录接口不拦截
+	// 分组拦截，登录接口不拦截, 配置了退出登录接口不拦截
 	if m.MiddlewareType == MiddlewareTypeGroup {
 		if gstr.HasSuffix(urlPath, m.LoginPath) ||
-			gstr.HasSuffix(urlPath, m.LogoutPath) {
+			(m.LogoutPath != "" && gstr.HasSuffix(urlPath, m.LogoutPath)) {
 			return false
 		}
 	}
