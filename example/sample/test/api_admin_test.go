@@ -2,9 +2,9 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/tiger1103/gtoken/gtoken"
 	"testing"
 )
 

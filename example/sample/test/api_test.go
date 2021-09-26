@@ -3,10 +3,10 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/goflyfox/gtoken/example/sample/test/server"
-	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/tiger1103/gtoken/example/sample/test/server"
+	"github.com/tiger1103/gtoken/gtoken"
 	"os"
 	"testing"
 )
