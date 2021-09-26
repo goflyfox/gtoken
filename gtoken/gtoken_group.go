@@ -36,3 +36,19 @@ func (m *GfToken) Middleware(group *ghttp.RouterGroup) bool {
 
 	return true
 }
+
+// AuthMiddleware 绑定登录状态校验
+func (m *GfToken) AuthMiddleware(group *ghttp.RouterGroup) bool {
+	if !m.InitConfig() {
+		return false
+	}
+	// 设置为Group模式
+	m.MiddlewareType = MiddlewareTypeGroup
+	// 缓存模式
+	if m.CacheMode > CacheModeRedis {
+		glog.Error("[GToken]CacheMode set error")
+		return false
+	}
+	group.Middleware(m.authMiddleware)
+	return true
+}
