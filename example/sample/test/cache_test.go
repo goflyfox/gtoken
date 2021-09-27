@@ -1,11 +1,11 @@
 package test
 
 import (
+	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/tiger1103/gtoken/gtoken"
 	"testing"
 	"time"
 )

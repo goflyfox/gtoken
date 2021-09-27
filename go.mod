@@ -1,4 +1,4 @@
-module github.com/tiger1103/gtoken
+module github.com/goflyfox/gtoken
 
 require github.com/gogf/gf v1.16.5
 
