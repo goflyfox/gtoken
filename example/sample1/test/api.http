@@ -1,3 +1,17 @@
 GET http://localhost/system/user
 
-###
+### 登陆
+GET http://localhost:8082/login?username=a&passwd=2
+
+> {%
+client.test("test",function() {
+  client.assert(response.status === 200, "Response status is not 200");
+  client.assert(response.code === 0, "code is not zero");
+})
+
+    client.global.set("token", encodeURIComponent(response.body.data.token));
+    client.log("token: "+client.global.get("token"));
+%}
+
+### 登出
+GET http://localhost:8082/user/logout?token={{token}}
