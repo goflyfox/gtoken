@@ -1,17 +1,18 @@
 package gtoken
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/crypto/gaes"
 	"github.com/gogf/gf/crypto/gmd5"
 	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
+	"net/http"
 	"strings"
 )
 
@@ -22,6 +23,12 @@ const (
 	MiddlewareTypeGroup  = 1
 	MiddlewareTypeBind   = 2
 	MiddlewareTypeGlobal = 3
+
+	DefaultTimeout        = 10 * 24 * 60 * 60 * 1000
+	DefaultCacheKey       = "GToken:"
+	DefaultTokenDelimiter = "_"
+	DefaultEncryptKey     = "12345678912345678912345678912345"
+	DefaultAuthFailMsg    = "请求错误或登录超时"
 )
 
 // GfToken gtoken结构体
@@ -79,11 +86,11 @@ func (m *GfToken) InitConfig() bool {
 	}
 
 	if m.CacheKey == "" {
-		m.CacheKey = "GToken:"
+		m.CacheKey = DefaultCacheKey
 	}
 
 	if m.Timeout == 0 {
-		m.Timeout = 10 * 24 * 60 * 60 * 1000
+		m.Timeout = DefaultTimeout
 	}
 
 	if m.MaxRefresh == 0 {
@@ -91,15 +98,15 @@ func (m *GfToken) InitConfig() bool {
 	}
 
 	if m.TokenDelimiter == "" {
-		m.TokenDelimiter = "_"
+		m.TokenDelimiter = DefaultTokenDelimiter
 	}
 
 	if len(m.EncryptKey) == 0 {
-		m.EncryptKey = []byte("12345678912345678912345678912345")
+		m.EncryptKey = []byte(DefaultEncryptKey)
 	}
 
 	if m.AuthFailMsg == "" {
-		m.AuthFailMsg = "请求错误或登录超时"
+		m.AuthFailMsg = DefaultAuthFailMsg
 	}
 
 	// 设置中间件模式，未设置说明历史版本，通过GlobalMiddleware兼容
@@ -116,14 +123,14 @@ func (m *GfToken) InitConfig() bool {
 			if !respData.Success() {
 				err := r.Response.WriteJson(respData)
 				if err != nil {
-					glog.Error(err)
+					g.Log().Error(err)
 				}
 			} else {
 				err := r.Response.WriteJson(Succ(g.Map{
 					"token": respData.GetString("token"),
 				}))
 				if err != nil {
-					glog.Error(err)
+					g.Log().Error(err)
 				}
 			}
 		}
@@ -140,12 +147,12 @@ func (m *GfToken) InitConfig() bool {
 			if respData.Success() {
 				err := r.Response.WriteJson(Succ("Logout success"))
 				if err != nil {
-					glog.Error(err)
+					g.Log().Error(err)
 				}
 			} else {
 				err := r.Response.WriteJson(respData)
 				if err != nil {
-					glog.Error(err)
+					g.Log().Error(err)
 				}
 			}
 		}
@@ -167,9 +174,9 @@ func (m *GfToken) InitConfig() bool {
 				r.Middleware.Next()
 			} else {
 				var params map[string]interface{}
-				if r.Method == "GET" {
+				if r.Method == http.MethodGet {
 					params = r.GetMap()
-				} else if r.Method == "POST" {
+				} else if r.Method == http.MethodPost {
 					params = r.GetMap()
 				} else {
 					r.Response.Writeln("Request Method is ERROR! ")
@@ -178,12 +185,12 @@ func (m *GfToken) InitConfig() bool {
 
 				no := gconv.String(gtime.TimestampMilli())
 
-				glog.Warning(fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
+				g.Log().Warning(fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
 					no, r.URL.Path, params, respData.Json()))
 				respData.Msg = m.AuthFailMsg
 				err := r.Response.WriteJson(respData)
 				if err != nil {
-					glog.Error(err)
+					g.Log().Error(err)
 				}
 				r.ExitAll()
 			}
@@ -194,24 +201,24 @@ func (m *GfToken) InitConfig() bool {
 }
 
 // Start 启动
-func (m *GfToken) Start() bool {
+func (m *GfToken) Start() error {
 	if !m.InitConfig() {
-		return false
+		return errors.New("InitConfig fail")
 	}
-	glog.Info("[GToken][params:" + m.String() + "]start... ")
+	g.Log().Info("[GToken][params:" + m.String() + "]start... ")
 
 	s := g.Server(m.ServerName)
 
 	// 缓存模式
 	if m.CacheMode > CacheModeRedis {
-		glog.Error("[GToken]CacheMode set error")
-		return false
+		g.Log().Error("[GToken]CacheMode set error")
+		return errors.New("CacheMode set error")
 	}
 
 	// 认证拦截器
 	if m.AuthPaths == nil {
-		glog.Error("[GToken]HookPathList not set")
-		return false
+		g.Log().Error("[GToken]AuthPaths not set")
+		return errors.New("AuthPaths not set")
 	}
 
 	// 是否是全局拦截
@@ -229,25 +236,25 @@ func (m *GfToken) Start() bool {
 
 	// 登录
 	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
-		glog.Error("[GToken]LoginPath or LoginBeforeFunc not set")
-		return false
+		g.Log().Error("[GToken]LoginPath or LoginBeforeFunc not set")
+		return errors.New("LoginPath or LoginBeforeFunc not set")
 	}
 	s.BindHandler(m.LoginPath, m.Login)
 
 	// 登出
 	if m.LogoutPath == "" {
-		glog.Error("[GToken]LogoutPath or LogoutFunc not set")
-		return false
+		g.Log().Error("[GToken]LogoutPath not set")
+		return errors.New("LogoutPath not set")
 	}
 	s.BindHandler(m.LogoutPath, m.Logout)
 
-	return true
+	return nil
 }
 
 // Stop 结束
-func (m *GfToken) Stop() bool {
-	glog.Info("[GToken]stop. ")
-	return true
+func (m *GfToken) Stop() error {
+	g.Log().Info("[GToken]stop. ")
+	return nil
 }
 
 // GetTokenData 通过token获取对象
@@ -265,7 +272,7 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 func (m *GfToken) Login(r *ghttp.Request) {
 	userKey, data := m.LoginBeforeFunc(r)
 	if userKey == "" {
-		glog.Error("[GToken]Login userKey is empty")
+		g.Log().Error("[GToken]Login userKey is empty")
 		return
 	}
 
@@ -391,10 +398,10 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) Resp {
 	if authHeader != "" {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			glog.Warning("[GToken]authHeader:" + authHeader + " get token key fail")
+			g.Log().Warning("[GToken]authHeader:" + authHeader + " get token key fail")
 			return Unauthorized("get token key fail", "")
 		} else if parts[1] == "" {
-			glog.Warning("[GToken]authHeader:" + authHeader + " get token fail")
+			g.Log().Warning("[GToken]authHeader:" + authHeader + " get token fail")
 			return Unauthorized("get token fail", "")
 		}
 
@@ -453,7 +460,7 @@ func (m *GfToken) validToken(token string) Resp {
 	}
 
 	if uuid != userCacheResp.GetString("uuid") {
-		glog.Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(userCacheResp.Data))
+		g.Log().Error("[GToken]user auth error, decryptToken:" + decryptToken.Json() + " cacheValue:" + gconv.String(userCacheResp.Data))
 		return Unauthorized("user auth error", "")
 	}
 
@@ -477,7 +484,7 @@ func (m *GfToken) getToken(userKey string) Resp {
 	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int64(refreshTime) {
 		userCache["createTime"] = gtime.Now().TimestampMilli()
 		userCache["refreshTime"] = gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh)
-		glog.Debug("[GToken]refreshToken:" + gconv.String(userCache))
+		g.Log().Debug("[GToken]refreshToken:" + gconv.String(userCache))
 		return m.setCache(cacheKey, userCache)
 	}
 
@@ -505,7 +512,7 @@ func (m *GfToken) EncryptToken(userKey string, uuid string) Resp {
 		// 重新生成uuid
 		newUuid, err := gmd5.Encrypt(grand.Letters(10))
 		if err != nil {
-			glog.Error("[GToken]uuid error", err)
+			g.Log().Error("[GToken]uuid error", err)
 			return Error("uuid error")
 		}
 		uuid = newUuid
@@ -515,7 +522,7 @@ func (m *GfToken) EncryptToken(userKey string, uuid string) Resp {
 
 	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)
 	if err != nil {
-		glog.Error("[GToken]encrypt error token:", tokenStr, err)
+		g.Log().Error("[GToken]encrypt error token:", tokenStr, err)
 		return Error("encrypt error")
 	}
 
@@ -534,17 +541,17 @@ func (m *GfToken) DecryptToken(token string) Resp {
 
 	token64, err := gbase64.Decode([]byte(token))
 	if err != nil {
-		glog.Error("[GToken]decode error token:", token, err)
+		g.Log().Error("[GToken]decode error token:", token, err)
 		return Error("decode error")
 	}
 	decryptToken, err2 := gaes.Decrypt(token64, m.EncryptKey)
 	if err2 != nil {
-		glog.Error("[GToken]decrypt error token:", token, err2)
+		g.Log().Error("[GToken]decrypt error token:", token, err2)
 		return Error("decrypt error")
 	}
 	tokenArray := gstr.Split(string(decryptToken), m.TokenDelimiter)
 	if len(tokenArray) < 2 {
-		glog.Error("[GToken]token len error token:", token)
+		g.Log().Error("[GToken]token len error token:", token)
 		return Error("token len error")
 	}
 
