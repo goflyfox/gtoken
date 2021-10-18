@@ -19,6 +19,7 @@ import (
 const (
 	CacheModeCache = 1
 	CacheModeRedis = 2
+	CacheModeFile  = 3
 
 	MiddlewareTypeGroup  = 1
 	MiddlewareTypeBind   = 2
@@ -84,6 +85,8 @@ func (m *GfToken) InitConfig() bool {
 	if m.CacheMode == 0 {
 		m.CacheMode = CacheModeCache
 	}
+
+
 
 	if m.CacheKey == "" {
 		m.CacheKey = DefaultCacheKey
@@ -210,7 +213,7 @@ func (m *GfToken) Start() error {
 	s := g.Server(m.ServerName)
 
 	// 缓存模式
-	if m.CacheMode > CacheModeRedis {
+	if m.CacheMode > CacheModeFile {
 		g.Log().Error("[GToken]CacheMode set error")
 		return errors.New("CacheMode set error")
 	}
@@ -247,6 +250,10 @@ func (m *GfToken) Start() error {
 		return errors.New("LogoutPath not set")
 	}
 	s.BindHandler(m.LogoutPath, m.Logout)
+
+	if m.CacheMode == 3 {
+		m.ReadFileCache()
+	}
 
 	return nil
 }

@@ -342,3 +342,7 @@ func TestMultiLogin(t *testing.T) {
 		}
 	}
 }
+
+func TestName(t *testing.T) {
+	gtoken.ReadFileCache()
+}
