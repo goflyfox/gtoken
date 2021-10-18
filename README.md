@@ -3,7 +3,7 @@
 ## 介绍
 基于`GoFrame`框架的token插件，通过服务端验证方式实现token认证；已完全可以支撑线上token认证，通过Redis支持集群模式；使用简单，大家可以放心使用；
 
-* github地址：https://github.com/goflyfox/gtoken
+* github地址：https://github.com/zhaopengme/gtoken
 * gitee地址：https://gitee.com/goflyfox/gtoken
 
 ## gtoken优势
@@ -36,8 +36,8 @@ MaxRefresh int
 
 ## 安装教程
 
-* gopath模式: `go get github.com/goflyfox/gtoken`
-* 或者 使用go.mod添加 :`require github.com/goflyfox/gtoken latest`
+* gopath模式: `go get github.com/zhaopengme/gtoken`
+* 或者 使用go.mod添加 :`require github.com/zhaopengme/gtoken latest`
 
 ## 分组中间件实现
 
