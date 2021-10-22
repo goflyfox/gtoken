@@ -1,40 +1,42 @@
 package gtoken
 
 import (
+	"errors"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
 )
 
 // Middleware 绑定group
-func (m *GfToken) Middleware(group *ghttp.RouterGroup) bool {
+func (m *GfToken) Middleware(group *ghttp.RouterGroup) error {
 	if !m.InitConfig() {
-		return false
+		return errors.New("InitConfig fail")
 	}
+
 	// 设置为Group模式
 	m.MiddlewareType = MiddlewareTypeGroup
-	glog.Info("[GToken][params:" + m.String() + "]start... ")
+	g.Log().Info("[GToken][params:" + m.String() + "]start... ")
 
 	// 缓存模式
 	if m.CacheMode > CacheModeRedis {
-		glog.Error("[GToken]CacheMode set error")
-		return false
+		g.Log().Error("[GToken]CacheMode set error")
+		return errors.New("CacheMode set error")
 	}
 	// 登录
 	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
-		glog.Error("[GToken]LoginPath or LoginBeforeFunc not set")
-		return false
+		g.Log().Error("[GToken]LoginPath or LoginBeforeFunc not set")
+		return errors.New("LoginPath or LoginBeforeFunc not set")
 	}
 	// 登出
 	if m.LogoutPath == "" {
-		glog.Error("[GToken]LogoutPath or LogoutFunc not set")
-		return false
+		g.Log().Error("[GToken]LogoutPath not set")
+		return errors.New("LogoutPath not set")
 	}
 
 	group.Middleware(m.authMiddleware)
 	group.ALL(m.LoginPath, m.Login)
 	group.ALL(m.LogoutPath, m.Logout)
 
-	return true
+	return nil
 }
 
 // AuthMiddleware 绑定登录状态校验

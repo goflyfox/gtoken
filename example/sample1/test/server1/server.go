@@ -4,7 +4,6 @@ import (
 	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
 )
 
 var TestServerName string
@@ -14,13 +13,13 @@ var TestServerName string
 var server *ghttp.Server
 
 func Start() {
-	glog.Info("########service start...")
+	g.Log().Info("########service start...")
 
 	g.Cfg().SetPath("../config")
 	server = g.Server(TestServerName)
 	initRouter(server)
 
-	glog.Info("########service finish.")
+	g.Log().Info("########service finish.")
 	server.Start()
 }
 
@@ -76,7 +75,10 @@ func initRouter(s *ghttp.Server) {
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
 		GlobalMiddleware: true,                                          // 开启全局拦截
 	}
-	gfToken.Start()
+	err := gfToken.Start()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Login(r *ghttp.Request) (string, interface{}) {

@@ -4,7 +4,6 @@ import (
 	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
 )
 
 var TestServerName string
@@ -14,14 +13,17 @@ var TestServerName string
 var server *ghttp.Server
 
 func Start() {
-	glog.Info("########service start...")
+	g.Log().Info("########service start...")
 
 	g.Cfg().SetPath("../config")
 	server = g.Server(TestServerName)
 	initRouter(server)
 
-	glog.Info("########service finish.")
-	server.Start()
+	g.Log().Info("########service finish.")
+	err := server.Start()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Stop() {
@@ -58,7 +60,10 @@ func initRouter(s *ghttp.Server) {
 	}
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
-		gfToken.Middleware(group)
+		err := gfToken.Middleware(group)
+		if err != nil {
+			panic(err)
+		}
 
 		group.ALL("/system/user", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("system user"))
@@ -86,7 +91,10 @@ func initRouter(s *ghttp.Server) {
 	}
 	s.Group("/admin", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
-		gfAdminToken.Middleware(group)
+		err := gfAdminToken.Middleware(group)
+		if err != nil {
+			panic(err)
+		}
 
 		group.ALL("/system/user", func(r *ghttp.Request) {
 			r.Response.WriteJson(gtoken.Succ("system user"))
