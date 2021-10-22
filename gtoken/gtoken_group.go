@@ -48,7 +48,7 @@ func (m *GfToken) AuthMiddleware(group *ghttp.RouterGroup) bool {
 	m.MiddlewareType = MiddlewareTypeGroup
 	// 缓存模式
 	if m.CacheMode > CacheModeRedis {
-		glog.Error("[GToken]CacheMode set error")
+		g.Log().Error("[GToken]CacheMode set error")
 		return false
 	}
 	group.Middleware(m.authMiddleware)
