@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/goflyfox/gtoken/example/sample1/test/server1"
 	"github.com/goflyfox/gtoken/gtoken"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"os"
 	"testing"
 )

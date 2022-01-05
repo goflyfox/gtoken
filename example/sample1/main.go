@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"github.com/goflyfox/gtoken/gtoken"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 var TestServerName string
@@ -11,13 +13,14 @@ var TestServerName string
 //var TestServerName string = "gtoken"
 
 func main() {
-	g.Log().Info("########service start...")
+	ctx := context.TODO()
+	g.Log().Info(ctx, "########service start...")
 
 	g.Cfg().SetPath("example/sample1")
 	s := g.Server(TestServerName)
 	initRouter(s)
 
-	g.Log().Info("########service finish.")
+	g.Log().Info(ctx, "########service finish.")
 	s.Run()
 }
 
@@ -27,6 +30,8 @@ var gfToken *gtoken.GfToken
 统一路由注册
 */
 func initRouter(s *ghttp.Server) {
+	ctx := context.TODO()
+
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
 
@@ -54,14 +59,14 @@ func initRouter(s *ghttp.Server) {
 	gfToken = &gtoken.GfToken{
 		ServerName: TestServerName,
 		//Timeout:         10 * 1000,
-		CacheMode:        g.Cfg().GetInt8("gToken.CacheMode"),
-		CacheKey:         g.Cfg().GetString("gToken.CacheKey"),
-		Timeout:          g.Cfg().GetInt("gToken.Timeout"),
-		MaxRefresh:       g.Cfg().GetInt("gToken.MaxRefresh"),
-		TokenDelimiter:   g.Cfg().GetString("gToken.TokenDelimiter"),
-		EncryptKey:       g.Cfg().GetBytes("gToken.EncryptKey"),
-		AuthFailMsg:      g.Cfg().GetString("gToken.AuthFailMsg"),
-		MultiLogin:       g.Config().GetBool("gToken.MultiLogin"),
+		CacheMode:        CfgGet(ctx, "gToken.CacheMode").Int8(),
+		CacheKey:         CfgGet(ctx, "gToken.CacheKey").String(),
+		Timeout:          CfgGet(ctx, "gToken.Timeout").Int(),
+		MaxRefresh:       CfgGet(ctx, "gToken.MaxRefresh").Int(),
+		TokenDelimiter:   CfgGet(ctx, "gToken.TokenDelimiter").String(),
+		EncryptKey:       CfgGet(ctx, "gToken.EncryptKey").Bytes(),
+		AuthFailMsg:      CfgGet(ctx, "gToken.AuthFailMsg").String(),
+		MultiLogin:       CfgGet(ctx, "gToken.MultiLogin").Bool(),
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
@@ -75,9 +80,14 @@ func initRouter(s *ghttp.Server) {
 	}
 }
 
+func CfgGet(ctx context.Context, name string) *gvar.Var {
+	gVar, _ := g.Config().Get(ctx, name)
+	return gVar
+}
+
 func Login(r *ghttp.Request) (string, interface{}) {
-	username := r.GetString("username")
-	passwd := r.GetString("passwd")
+	username := r.Get("username").String()
+	passwd := r.Get("passwd").String()
 
 	if username == "" || passwd == "" {
 		r.Response.WriteJson(gtoken.Fail("账号或密码错误."))

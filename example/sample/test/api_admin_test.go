@@ -1,10 +1,10 @@
 package test
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/goflyfox/gtoken/gtoken"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 )
 
@@ -20,7 +20,7 @@ var (
 func TestAdminSystemUser(t *testing.T) {
 	// 未登录
 	t.Log("1. not login and visit user")
-	if r, e := g.Client().Post(TestAdminURL+"/system/user", "username="+AdminUsername); e != nil {
+	if r, e := g.Client().Post(context.TODO(), TestAdminURL+"/system/user", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -70,7 +70,7 @@ func TestAdminSystemUser(t *testing.T) {
 func TestAdminUserLoginFail(t *testing.T) {
 	// 登录失败
 	t.Log("1. login fail ")
-	if r, e := g.Client().Post(TestAdminURL+"/login", "username=&passwd="); e != nil {
+	if r, e := g.Client().Post(context.TODO(), TestAdminURL+"/login", "username=&passwd="); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -93,7 +93,7 @@ func TestAdminUserLoginFail(t *testing.T) {
 func TestAdminExclude(t *testing.T) {
 	// 未登录可以访问
 	t.Log("1. exclude user info")
-	if r, e := g.Client().Post(TestAdminURL+"/system/user/info", "username="+AdminUsername); e != nil {
+	if r, e := g.Client().Post(context.TODO(), TestAdminURL+"/system/user/info", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -111,7 +111,7 @@ func TestAdminExclude(t *testing.T) {
 		}
 	}
 
-	if r, e := g.Client().Post(TestAdminURL+"/user/info", "username="+AdminUsername); e != nil {
+	if r, e := g.Client().Post(context.TODO(), TestAdminURL+"/user/info", "username="+AdminUsername); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -158,7 +158,7 @@ func TestAdminLogout(t *testing.T) {
 func TestAdminMultiLogin(t *testing.T) {
 	t.Log(" TestMultiLogin start... ")
 	var token1, token2 string
-	if r, e := g.Client().Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(context.TODO(), TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -180,7 +180,7 @@ func TestAdminMultiLogin(t *testing.T) {
 	}
 	t.Log("token1:" + token1)
 
-	if r, e := g.Client().Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(context.TODO(), TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -203,7 +203,11 @@ func TestAdminMultiLogin(t *testing.T) {
 
 	t.Log("token2:" + token2)
 
-	if g.Config().GetBool("gToken.MultiLogin") {
+	gVar, err := g.Cfg().Get(context.TODO(), "gToken.MultiLogin")
+	if err != nil {
+		t.Error("error:", err)
+	}
+	if gVar.Bool() {
 		if token1 != token2 {
 			t.Error("error:", "token not same ")
 		}
@@ -216,9 +220,9 @@ func TestAdminMultiLogin(t *testing.T) {
 }
 
 func PostAdmin(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
-	client := ghttp.NewClient()
+	client := g.Client()
 	client.SetHeader("Authorization", "Bearer "+getAdminToken(t))
-	content := client.RequestContent("POST", TestAdminURL+urlPath, data...)
+	content := client.RequestContent(context.TODO(), "POST", TestAdminURL+urlPath, data...)
 	var respData gtoken.Resp
 	err := json.Unmarshal([]byte(content), &respData)
 	if err != nil {
@@ -232,7 +236,7 @@ func getAdminToken(t *testing.T) string {
 		return TokenAdmin[AdminUsername]
 	}
 
-	if r, e := g.Client().Post(TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(context.TODO(), TestAdminURL+"/login", "username="+AdminUsername+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()

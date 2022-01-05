@@ -1,17 +1,18 @@
 package gtoken
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/crypto/gaes"
-	"github.com/gogf/gf/crypto/gmd5"
-	"github.com/gogf/gf/encoding/gbase64"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/crypto/gaes"
+	"github.com/gogf/gf/v2/crypto/gmd5"
+	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/grand"
 	"net/http"
 	"strings"
 )
@@ -201,23 +202,23 @@ func (m *GfToken) InitConfig() bool {
 }
 
 // Start 启动
-func (m *GfToken) Start() error {
+func (m *GfToken) Start(ctx context.Context) error {
 	if !m.InitConfig() {
 		return errors.New("InitConfig fail")
 	}
-	g.Log().Info("[GToken][params:" + m.String() + "]start... ")
+	g.Log().Info(ctx, "[GToken][params:"+m.String()+"]start... ")
 
 	s := g.Server(m.ServerName)
 
 	// 缓存模式
 	if m.CacheMode > CacheModeRedis {
-		g.Log().Error("[GToken]CacheMode set error")
+		g.Log().Error(ctx, "[GToken]CacheMode set error")
 		return errors.New("CacheMode set error")
 	}
 
 	// 认证拦截器
 	if m.AuthPaths == nil {
-		g.Log().Error("[GToken]AuthPaths not set")
+		g.Log().Error(ctx, "[GToken]AuthPaths not set")
 		return errors.New("AuthPaths not set")
 	}
 
@@ -236,14 +237,14 @@ func (m *GfToken) Start() error {
 
 	// 登录
 	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
-		g.Log().Error("[GToken]LoginPath or LoginBeforeFunc not set")
+		g.Log().Error(ctx, "[GToken]LoginPath or LoginBeforeFunc not set")
 		return errors.New("LoginPath or LoginBeforeFunc not set")
 	}
 	s.BindHandler(m.LoginPath, m.Login)
 
 	// 登出
 	if m.LogoutPath == "" {
-		g.Log().Error("[GToken]LogoutPath not set")
+		g.Log().Error(ctx, "[GToken]LogoutPath not set")
 		return errors.New("LogoutPath not set")
 	}
 	s.BindHandler(m.LogoutPath, m.Logout)
@@ -270,9 +271,10 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 
 // Login 登录
 func (m *GfToken) Login(r *ghttp.Request) {
+	ctx := r.Context()
 	userKey, data := m.LoginBeforeFunc(r)
 	if userKey == "" {
-		g.Log().Error("[GToken]Login userKey is empty")
+		g.Log().Error(ctx, "[GToken]Login userKey is empty")
 		return
 	}
 
