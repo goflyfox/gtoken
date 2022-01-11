@@ -1,9 +1,11 @@
 package server1
 
 import (
+	"context"
 	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gcfg"
 )
 
 var TestServerName string
@@ -13,13 +15,17 @@ var TestServerName string
 var server *ghttp.Server
 
 func Start() {
-	g.Log().Info("########service start...")
+	ctx := context.TODO()
 
-	g.Cfg().SetPath("../config")
+	g.Log().Info(ctx, "########service start...")
+
+	if fileConfig, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile); ok {
+		fileConfig.SetPath("example/sample1")
+	}
 	server = g.Server(TestServerName)
 	initRouter(server)
 
-	g.Log().Info("########service finish.")
+	g.Log().Info(ctx, "########service finish.")
 	server.Start()
 }
 
@@ -56,18 +62,53 @@ func initRouter(s *ghttp.Server) {
 	})
 
 	loginFunc := Login
+
+	ctx := context.TODO()
+	CacheModeVar, err := g.Cfg().Get(ctx, "gToken.CacheMode")
+	if err != nil {
+		panic(err)
+	}
+	CacheKey, err := g.Cfg().Get(ctx, "gToken.CacheKey")
+	if err != nil {
+		panic(err)
+	}
+	Timeout, err := g.Cfg().Get(ctx, "gToken.Timeout")
+	if err != nil {
+		panic(err)
+	}
+	MaxRefresh, err := g.Cfg().Get(ctx, "gToken.MaxRefresh")
+	if err != nil {
+		panic(err)
+	}
+	TokenDelimiter, err := g.Cfg().Get(ctx, "gToken.TokenDelimiter")
+	if err != nil {
+		panic(err)
+	}
+	EncryptKey, err := g.Cfg().Get(ctx, "gToken.EncryptKey")
+	if err != nil {
+		panic(err)
+	}
+	AuthFailMsg, err := g.Cfg().Get(ctx, "gToken.AuthFailMsg")
+	if err != nil {
+		panic(err)
+	}
+	MultiLogin, err := g.Cfg().Get(ctx, "gToken.MultiLogin")
+	if err != nil {
+		panic(err)
+	}
+
 	// 启动gtoken
 	gfToken = &gtoken.GfToken{
 		ServerName: TestServerName,
 		//Timeout:         10 * 1000,
-		CacheMode:        g.Cfg().GetInt8("gToken.CacheMode"),
-		CacheKey:         g.Cfg().GetString("gToken.CacheKey"),
-		Timeout:          g.Cfg().GetInt("gToken.Timeout"),
-		MaxRefresh:       g.Cfg().GetInt("gToken.MaxRefresh"),
-		TokenDelimiter:   g.Cfg().GetString("gToken.TokenDelimiter"),
-		EncryptKey:       g.Cfg().GetBytes("gToken.EncryptKey"),
-		AuthFailMsg:      g.Cfg().GetString("gToken.AuthFailMsg"),
-		MultiLogin:       g.Config().GetBool("gToken.MultiLogin"),
+		CacheMode:        CacheModeVar.Int8(),
+		CacheKey:         CacheKey.String(),
+		Timeout:          Timeout.Int(),
+		MaxRefresh:       MaxRefresh.Int(),
+		TokenDelimiter:   TokenDelimiter.String(),
+		EncryptKey:       EncryptKey.Bytes(),
+		AuthFailMsg:      AuthFailMsg.String(),
+		MultiLogin:       MultiLogin.Bool(),
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
@@ -75,15 +116,16 @@ func initRouter(s *ghttp.Server) {
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
 		GlobalMiddleware: true,                                          // 开启全局拦截
 	}
-	err := gfToken.Start()
+	err = gfToken.Start(ctx)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func Login(r *ghttp.Request) (string, interface{}) {
-	username := r.GetString("username")
-	passwd := r.GetString("passwd")
+
+	username := r.Get("username").String()
+	passwd := r.Get("passwd").String()
 
 	if username == "" || passwd == "" {
 		r.Response.WriteJson(gtoken.Fail("账号或密码错误."))

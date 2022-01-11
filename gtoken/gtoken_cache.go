@@ -1,6 +1,7 @@
 package gtoken
 
 import (
+	"context"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
@@ -9,19 +10,19 @@ import (
 )
 
 // setCache 设置缓存
-func (m *GfToken) setCache(cacheKey string, userCache g.Map) Resp {
+func (m *GfToken) setCache(ctx context.Context, cacheKey string, userCache g.Map) Resp {
 	switch m.CacheMode {
 	case CacheModeCache:
-		gcache.Set(cacheKey, userCache, gconv.Duration(m.Timeout)*time.Millisecond)
+		gcache.Set(ctx, cacheKey, userCache, gconv.Duration(m.Timeout)*time.Millisecond)
 	case CacheModeRedis:
 		cacheValueJson, err1 := gjson.Encode(userCache)
 		if err1 != nil {
-			g.Log().Error("[GToken]cache json encode error", err1)
+			g.Log().Error(ctx, "[GToken]cache json encode error", err1)
 			return Error("cache json encode error")
 		}
-		_, err := g.Redis().Do("SETEX", cacheKey, m.Timeout/1000, cacheValueJson)
+		_, err := g.Redis().Do(ctx, "SETEX", cacheKey, m.Timeout/1000, cacheValueJson)
 		if err != nil {
-			g.Log().Error("[GToken]cache set error", err)
+			g.Log().Error(ctx, "[GToken]cache set error", err)
 			return Error("cache set error")
 		}
 	default:
@@ -32,13 +33,13 @@ func (m *GfToken) setCache(cacheKey string, userCache g.Map) Resp {
 }
 
 // getCache 获取缓存
-func (m *GfToken) getCache(cacheKey string) Resp {
+func (m *GfToken) getCache(ctx context.Context, cacheKey string) Resp {
 	var userCache g.Map
 	switch m.CacheMode {
 	case CacheModeCache:
-		userCacheValue, err := gcache.Get(cacheKey)
+		userCacheValue, err := gcache.Get(ctx, cacheKey)
 		if err != nil {
-			g.Log().Error("[GToken]cache get error", err)
+			g.Log().Error(ctx, "[GToken]cache get error", err)
 			return Error("cache get error")
 		}
 		if userCacheValue == nil {
@@ -46,9 +47,9 @@ func (m *GfToken) getCache(cacheKey string) Resp {
 		}
 		userCache = gconv.Map(userCacheValue)
 	case CacheModeRedis:
-		userCacheJson, err := g.Redis().Do("GET", cacheKey)
+		userCacheJson, err := g.Redis().Do(ctx, "GET", cacheKey)
 		if err != nil {
-			g.Log().Error("[GToken]cache get error", err)
+			g.Log().Error(ctx, "[GToken]cache get error", err)
 			return Error("cache get error")
 		}
 		if userCacheJson == nil {
@@ -57,7 +58,7 @@ func (m *GfToken) getCache(cacheKey string) Resp {
 
 		err = gjson.DecodeTo(userCacheJson, &userCache)
 		if err != nil {
-			g.Log().Error("[GToken]cache get json error", err)
+			g.Log().Error(ctx, "[GToken]cache get json error", err)
 			return Error("cache get json error")
 		}
 	default:
@@ -68,18 +69,18 @@ func (m *GfToken) getCache(cacheKey string) Resp {
 }
 
 // removeCache 删除缓存
-func (m *GfToken) removeCache(cacheKey string) Resp {
+func (m *GfToken) removeCache(ctx context.Context, cacheKey string) Resp {
 	switch m.CacheMode {
 	case CacheModeCache:
-		_, err := gcache.Remove(cacheKey)
+		_, err := gcache.Remove(ctx, cacheKey)
 		if err != nil {
-			g.Log().Error(err)
+			g.Log().Error(ctx, err)
 		}
 	case CacheModeRedis:
 		var err error
-		_, err = g.Redis().Do("DEL", cacheKey)
+		_, err = g.Redis().Do(ctx, "DEL", cacheKey)
 		if err != nil {
-			g.Log().Error("[GToken]cache remove error", err)
+			g.Log().Error(ctx, "[GToken]cache remove error", err)
 			return Error("cache remove error")
 		}
 	default:
