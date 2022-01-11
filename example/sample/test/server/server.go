@@ -1,9 +1,11 @@
 package server
 
 import (
+	"context"
 	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gcfg"
 )
 
 var TestServerName string
@@ -13,13 +15,17 @@ var TestServerName string
 var server *ghttp.Server
 
 func Start() {
-	g.Log().Info("########service start...")
+	ctx := context.TODO()
 
-	g.Cfg().SetPath("../config")
+	g.Log().Info(ctx, "########service start...")
+
+	if fileConfig, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile); ok {
+		fileConfig.SetPath("../config")
+	}
 	server = g.Server(TestServerName)
 	initRouter(server)
 
-	g.Log().Info("########service finish.")
+	g.Log().Info(ctx, "########service finish.")
 	err := server.Start()
 	if err != nil {
 		panic(err)
@@ -37,6 +43,8 @@ var gfAdminToken *gtoken.GfToken
 统一路由注册
 */
 func initRouter(s *ghttp.Server) {
+	ctx := context.TODO()
+
 	// 不认证接口
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
@@ -47,6 +55,10 @@ func initRouter(s *ghttp.Server) {
 		})
 	})
 
+	MultiLogin, err := g.Cfg().Get(ctx, "gToken.MultiLogin")
+	if err != nil {
+		panic(err)
+	}
 	// 认证接口
 	loginFunc := Login
 	// 启动gtoken
@@ -56,11 +68,11 @@ func initRouter(s *ghttp.Server) {
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
-		MultiLogin:       g.Config().GetBool("gToken.MultiLogin"),
+		MultiLogin:       MultiLogin.Bool(),
 	}
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
-		err := gfToken.Middleware(group)
+		err := gfToken.Middleware(ctx, group)
 		if err != nil {
 			panic(err)
 		}
@@ -87,11 +99,11 @@ func initRouter(s *ghttp.Server) {
 		LoginBeforeFunc:  loginFunc,
 		LogoutPath:       "/user/logout",
 		AuthExcludePaths: g.SliceStr{"/admin/user/info", "/admin/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
-		MultiLogin:       g.Config().GetBool("gToken.MultiLogin"),
+		MultiLogin:       MultiLogin.Bool(),
 	}
 	s.Group("/admin", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
-		err := gfAdminToken.Middleware(group)
+		err := gfAdminToken.Middleware(ctx, group)
 		if err != nil {
 			panic(err)
 		}
@@ -109,8 +121,8 @@ func initRouter(s *ghttp.Server) {
 }
 
 func Login(r *ghttp.Request) (string, interface{}) {
-	username := r.GetString("username")
-	passwd := r.GetString("passwd")
+	username := r.Get("username").String()
+	passwd := r.Get("passwd").String()
 
 	if username == "" || passwd == "" {
 		r.Response.WriteJson(gtoken.Fail("账号或密码错误."))

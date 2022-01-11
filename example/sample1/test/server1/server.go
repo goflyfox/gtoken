@@ -20,7 +20,7 @@ func Start() {
 	g.Log().Info(ctx, "########service start...")
 
 	if fileConfig, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile); ok {
-		fileConfig.SetPath("example/sample1")
+		fileConfig.SetPath("../config")
 	}
 	server = g.Server(TestServerName)
 	initRouter(server)
