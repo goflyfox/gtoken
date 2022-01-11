@@ -204,9 +204,9 @@ func (m *GfToken) InitConfig(ctx context.Context) bool {
 // Start 启动
 func (m *GfToken) Start(ctx context.Context) error {
 	if !m.InitConfig(ctx) {
-		return errors.New("InitConfig fail")
+		return errors.New(MsgErrInitFail)
 	}
-	g.Log().Info(ctx, "[GToken][params:"+m.String()+"]start... ")
+	g.Log().Info(ctx, logMsg("[params:"+m.String()+"]start... "))
 
 	s := g.Server(m.ServerName)
 
