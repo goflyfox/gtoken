@@ -3,6 +3,8 @@
 ## 介绍
 基于`GoFrame`框架的token插件，通过服务端验证方式实现token认证；已完全可以支撑线上token认证，通过Redis支持集群模式；使用简单，大家可以放心使用；
 
+**全面适配GoFrame v2.0.0 ; GoFrame v1.X.X 请使用gtoken v1.4.X相关版本;**
+
 * github地址：https://github.com/goflyfox/gtoken
 * gitee地址：https://gitee.com/goflyfox/gtoken
 
@@ -33,6 +35,7 @@ MaxRefresh int
 4. 支持分组拦截、全局拦截、深度路径拦截，便于根据个人需求定制拦截器；**建议使用分组拦截方式；**
 5. 框架使用简单，只需要设置登录验证方法以及登录、登出路径即可；
 6. 在`gtoken v1.4.0`版本开始支持分组中间件方式实现，但依然兼容全局和深度中间件实现方式；
+7. 在`gtoken v1.5.0`全面适配GoFrame v2.0.0 ; GoFrame v1.X.X 请使用GfToken v1.4.X相关版本;
 
 ## 安装教程
 
