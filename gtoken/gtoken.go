@@ -293,7 +293,6 @@ func (m *GfToken) getToken(ctx context.Context, userKey string) Resp {
 	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int64(refreshTime) {
 		userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
 		userCache[KeyRefreshTime] = gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh)
-		g.Log().Debug(ctx, "[GToken]refreshToken:"+gconv.String(userCache))
 		return m.setCache(ctx, cacheKey, userCache)
 	}
 
