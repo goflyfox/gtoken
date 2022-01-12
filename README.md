@@ -245,8 +245,6 @@ https://itician.org/pages/viewpage.action?pageId=1115974
 
 - 项目的发展，离不开大家得支持~！~
 
-- [【双12】主会场 低至1折；请点击这里](https://www.aliyun.com/1212/2019/home?userCode=c4hsn0gc)
-- [阿里云：ECS云服务器2折起；请点击这里](https://www.aliyun.com/acts/limit-buy?spm=5176.11544616.khv0c5cu5.1.1d8e23e8XHvEIq&userCode=c4hsn0gc)
 - [阿里云：ECS云服务器新人优惠券；请点击这里](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=c4hsn0gc)
 
 - 也可以请作者喝一杯咖啡:)
