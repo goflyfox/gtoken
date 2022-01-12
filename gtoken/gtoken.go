@@ -17,21 +17,6 @@ import (
 	"strings"
 )
 
-const (
-	CacheModeCache = 1
-	CacheModeRedis = 2
-
-	MiddlewareTypeGroup  = 1
-	MiddlewareTypeBind   = 2
-	MiddlewareTypeGlobal = 3
-
-	DefaultTimeout        = 10 * 24 * 60 * 60 * 1000
-	DefaultCacheKey       = "GToken:"
-	DefaultTokenDelimiter = "_"
-	DefaultEncryptKey     = "12345678912345678912345678912345"
-	DefaultAuthFailMsg    = "请求错误或登录超时"
-)
-
 // GfToken gtoken结构体
 type GfToken struct {
 	// GoFrame server name
@@ -80,201 +65,11 @@ type GfToken struct {
 	AuthAfterFunc func(r *ghttp.Request, respData Resp)
 }
 
-// InitConfig 初始化配置信息
-func (m *GfToken) InitConfig(ctx context.Context) bool {
-	if m.CacheMode == 0 {
-		m.CacheMode = CacheModeCache
-	}
-
-	if m.CacheKey == "" {
-		m.CacheKey = DefaultCacheKey
-	}
-
-	if m.Timeout == 0 {
-		m.Timeout = DefaultTimeout
-	}
-
-	if m.MaxRefresh == 0 {
-		m.MaxRefresh = m.Timeout / 2
-	}
-
-	if m.TokenDelimiter == "" {
-		m.TokenDelimiter = DefaultTokenDelimiter
-	}
-
-	if len(m.EncryptKey) == 0 {
-		m.EncryptKey = []byte(DefaultEncryptKey)
-	}
-
-	if m.AuthFailMsg == "" {
-		m.AuthFailMsg = DefaultAuthFailMsg
-	}
-
-	// 设置中间件模式，未设置说明历史版本，通过GlobalMiddleware兼容
-	if m.MiddlewareType == 0 {
-		if m.GlobalMiddleware {
-			m.MiddlewareType = MiddlewareTypeGlobal
-		} else {
-			m.MiddlewareType = MiddlewareTypeBind
-		}
-	}
-
-	if m.LoginAfterFunc == nil {
-		m.LoginAfterFunc = func(r *ghttp.Request, respData Resp) {
-			if !respData.Success() {
-				err := r.Response.WriteJson(respData)
-				if err != nil {
-					g.Log().Error(ctx, err)
-				}
-			} else {
-				err := r.Response.WriteJson(Succ(g.Map{
-					"token": respData.GetString("token"),
-				}))
-				if err != nil {
-					g.Log().Error(ctx, err)
-				}
-			}
-		}
-	}
-
-	if m.LogoutBeforeFunc == nil {
-		m.LogoutBeforeFunc = func(r *ghttp.Request) bool {
-			return true
-		}
-	}
-
-	if m.LogoutAfterFunc == nil {
-		m.LogoutAfterFunc = func(r *ghttp.Request, respData Resp) {
-			if respData.Success() {
-				err := r.Response.WriteJson(Succ("Logout success"))
-				if err != nil {
-					g.Log().Error(ctx, err)
-				}
-			} else {
-				err := r.Response.WriteJson(respData)
-				if err != nil {
-					g.Log().Error(ctx, err)
-				}
-			}
-		}
-	}
-
-	if m.AuthBeforeFunc == nil {
-		m.AuthBeforeFunc = func(r *ghttp.Request) bool {
-			// 静态页面不拦截
-			if r.IsFileRequest() {
-				return false
-			}
-
-			return true
-		}
-	}
-	if m.AuthAfterFunc == nil {
-		m.AuthAfterFunc = func(r *ghttp.Request, respData Resp) {
-			if respData.Success() {
-				r.Middleware.Next()
-			} else {
-				var params map[string]interface{}
-				if r.Method == http.MethodGet {
-					params = r.GetMap()
-				} else if r.Method == http.MethodPost {
-					params = r.GetMap()
-				} else {
-					r.Response.Writeln("Request Method is ERROR! ")
-					return
-				}
-
-				no := gconv.String(gtime.TimestampMilli())
-
-				g.Log().Warning(ctx, fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
-					no, r.URL.Path, params, respData.Json()))
-				respData.Msg = m.AuthFailMsg
-				err := r.Response.WriteJson(respData)
-				if err != nil {
-					g.Log().Error(ctx, err)
-				}
-				r.ExitAll()
-			}
-		}
-	}
-
-	return true
-}
-
-// Start 启动
-func (m *GfToken) Start(ctx context.Context) error {
-	if !m.InitConfig(ctx) {
-		return errors.New(MsgErrInitFail)
-	}
-	g.Log().Info(ctx, logMsg("[params:"+m.String()+"]start... "))
-
-	s := g.Server(m.ServerName)
-
-	// 缓存模式
-	if m.CacheMode > CacheModeRedis {
-		g.Log().Error(ctx, "[GToken]CacheMode set error")
-		return errors.New("CacheMode set error")
-	}
-
-	// 认证拦截器
-	if m.AuthPaths == nil {
-		g.Log().Error(ctx, "[GToken]AuthPaths not set")
-		return errors.New("AuthPaths not set")
-	}
-
-	// 是否是全局拦截
-	if m.MiddlewareType == MiddlewareTypeGlobal {
-		s.BindMiddlewareDefault(m.authMiddleware)
-	} else {
-		for _, authPath := range m.AuthPaths {
-			tmpPath := authPath
-			if !strings.HasSuffix(authPath, "/*") {
-				tmpPath += "/*"
-			}
-			s.BindMiddleware(tmpPath, m.authMiddleware)
-		}
-	}
-
-	// 登录
-	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
-		g.Log().Error(ctx, "[GToken]LoginPath or LoginBeforeFunc not set")
-		return errors.New("LoginPath or LoginBeforeFunc not set")
-	}
-	s.BindHandler(m.LoginPath, m.Login)
-
-	// 登出
-	if m.LogoutPath == "" {
-		g.Log().Error(ctx, "[GToken]LogoutPath not set")
-		return errors.New("LogoutPath not set")
-	}
-	s.BindHandler(m.LogoutPath, m.Logout)
-
-	return nil
-}
-
-// Stop 结束
-func (m *GfToken) Stop(ctx context.Context) error {
-	g.Log().Info(ctx, "[GToken]stop. ")
-	return nil
-}
-
-// GetTokenData 通过token获取对象
-func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
-	respData := m.getRequestToken(r)
-	if respData.Success() {
-		// 验证token
-		respData = m.validToken(r.Context(), respData.DataString())
-	}
-
-	return respData
-}
-
 // Login 登录
 func (m *GfToken) Login(r *ghttp.Request) {
-	ctx := r.Context()
 	userKey, data := m.LoginBeforeFunc(r)
 	if userKey == "" {
-		g.Log().Error(ctx, "[GToken]Login userKey is empty")
+		g.Log().Error(r.Context(), msgLog(MsgErrUserKeyEmpty))
 		return
 	}
 
@@ -282,7 +77,7 @@ func (m *GfToken) Login(r *ghttp.Request) {
 		// 支持多端重复登录，返回相同token
 		userCacheResp := m.getToken(r.Context(), userKey)
 		if userCacheResp.Success() {
-			respToken := m.EncryptToken(r.Context(), userKey, userCacheResp.GetString("uuid"))
+			respToken := m.EncryptToken(r.Context(), userKey, userCacheResp.GetString(KeyUuid))
 			m.LoginAfterFunc(r, respToken)
 			return
 		}
@@ -296,16 +91,18 @@ func (m *GfToken) Login(r *ghttp.Request) {
 
 // Logout 登出
 func (m *GfToken) Logout(r *ghttp.Request) {
-	if m.LogoutBeforeFunc(r) {
-		// 获取请求token
-		respData := m.getRequestToken(r)
-		if respData.Success() {
-			// 删除token
-			m.RemoveToken(r.Context(), respData.DataString())
-		}
-
-		m.LogoutAfterFunc(r, respData)
+	if !m.LogoutBeforeFunc(r) {
+		return
 	}
+
+	// 获取请求token
+	respData := m.getRequestToken(r)
+	if respData.Success() {
+		// 删除token
+		m.RemoveToken(r.Context(), respData.DataString())
+	}
+
+	m.LogoutAfterFunc(r, respData)
 }
 
 // AuthMiddleware 认证拦截
@@ -331,7 +128,17 @@ func (m *GfToken) authMiddleware(r *ghttp.Request) {
 	}
 
 	m.AuthAfterFunc(r, tokenResp)
+}
 
+// GetTokenData 通过token获取对象
+func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
+	respData := m.getRequestToken(r)
+	if respData.Success() {
+		// 验证token
+		respData = m.validToken(r.Context(), respData.DataString())
+	}
+
+	return respData
 }
 
 // AuthPath 判断路径是否需要进行认证拦截
@@ -400,19 +207,19 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) Resp {
 	if authHeader != "" {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			g.Log().Warning(r.Context(), "[GToken]authHeader:"+authHeader+" get token key fail")
-			return Unauthorized("get token key fail", "")
+			g.Log().Warning(r.Context(), msgLog(MsgErrAuthHeader, authHeader))
+			return Unauthorized(fmt.Sprintf(MsgErrAuthHeader, authHeader), "")
 		} else if parts[1] == "" {
-			g.Log().Warning(r.Context(), "[GToken]authHeader:"+authHeader+" get token fail")
-			return Unauthorized("get token fail", "")
+			g.Log().Warning(r.Context(), msgLog(MsgErrAuthHeader, authHeader))
+			return Unauthorized(fmt.Sprintf(MsgErrAuthHeader, authHeader), "")
 		}
 
 		return Succ(parts[1])
 	}
 
-	authHeader = r.Get("token").String()
+	authHeader = r.Get(KeyToken).String()
 	if authHeader == "" {
-		return Unauthorized("query token fail", "")
+		return Unauthorized(MsgErrTokenEmpty, "")
 	}
 	return Succ(authHeader)
 
@@ -427,11 +234,11 @@ func (m *GfToken) genToken(ctx context.Context, userKey string, data interface{}
 
 	cacheKey := m.CacheKey + userKey
 	userCache := g.Map{
-		"userKey":     userKey,
-		"uuid":        token.GetString("uuid"),
-		"data":        data,
-		"createTime":  gtime.Now().TimestampMilli(),
-		"refreshTime": gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh),
+		KeyUserKey:     userKey,
+		KeyUuid:        token.GetString(KeyUuid),
+		KeyData:        data,
+		KeyCreateTime:  gtime.Now().TimestampMilli(),
+		KeyRefreshTime: gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh),
 	}
 
 	cacheResp := m.setCache(ctx, cacheKey, userCache)
@@ -445,7 +252,7 @@ func (m *GfToken) genToken(ctx context.Context, userKey string, data interface{}
 // validToken 验证Token
 func (m *GfToken) validToken(ctx context.Context, token string) Resp {
 	if token == "" {
-		return Unauthorized("valid token empty", "")
+		return Unauthorized(MsgErrTokenEmpty, "")
 	}
 
 	decryptToken := m.DecryptToken(ctx, token)
@@ -453,17 +260,17 @@ func (m *GfToken) validToken(ctx context.Context, token string) Resp {
 		return decryptToken
 	}
 
-	userKey := decryptToken.GetString("userKey")
-	uuid := decryptToken.GetString("uuid")
+	userKey := decryptToken.GetString(KeyUserKey)
+	uuid := decryptToken.GetString(KeyUuid)
 
 	userCacheResp := m.getToken(ctx, userKey)
 	if !userCacheResp.Success() {
 		return userCacheResp
 	}
 
-	if uuid != userCacheResp.GetString("uuid") {
-		g.Log().Error(ctx, "[GToken]user auth error, decryptToken:"+decryptToken.Json()+" cacheValue:"+gconv.String(userCacheResp.Data))
-		return Unauthorized("user auth error", "")
+	if uuid != userCacheResp.GetString(KeyUuid) {
+		g.Log().Error(ctx, msgLog(MsgErrAuthUuid)+", decryptToken:"+decryptToken.Json()+" cacheValue:"+gconv.String(userCacheResp.Data))
+		return Unauthorized(MsgErrAuthUuid, "")
 	}
 
 	return userCacheResp
@@ -480,12 +287,12 @@ func (m *GfToken) getToken(ctx context.Context, userKey string) Resp {
 	userCache := gconv.Map(userCacheResp.Data)
 
 	nowTime := gtime.Now().TimestampMilli()
-	refreshTime := userCache["refreshTime"]
+	refreshTime := userCache[KeyRefreshTime]
 
 	// 需要进行缓存超时时间刷新
 	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int64(refreshTime) {
-		userCache["createTime"] = gtime.Now().TimestampMilli()
-		userCache["refreshTime"] = gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh)
+		userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
+		userCache[KeyRefreshTime] = gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh)
 		g.Log().Debug(ctx, "[GToken]refreshToken:"+gconv.String(userCache))
 		return m.setCache(ctx, cacheKey, userCache)
 	}
@@ -500,22 +307,22 @@ func (m *GfToken) RemoveToken(ctx context.Context, token string) Resp {
 		return decryptToken
 	}
 
-	cacheKey := m.CacheKey + decryptToken.GetString("userKey")
+	cacheKey := m.CacheKey + decryptToken.GetString(KeyUserKey)
 	return m.removeCache(ctx, cacheKey)
 }
 
 // EncryptToken token加密方法
 func (m *GfToken) EncryptToken(ctx context.Context, userKey string, uuid string) Resp {
 	if userKey == "" {
-		return Fail("encrypt userKey empty")
+		return Fail(MsgErrUserKeyEmpty)
 	}
 
 	if uuid == "" {
 		// 重新生成uuid
 		newUuid, err := gmd5.Encrypt(grand.Letters(10))
 		if err != nil {
-			g.Log().Error(ctx, "[GToken]uuid error", err)
-			return Error("uuid error")
+			g.Log().Error(ctx, msgLog(MsgErrAuthUuid), err)
+			return Error(MsgErrAuthUuid)
 		}
 		uuid = newUuid
 	}
@@ -524,43 +331,227 @@ func (m *GfToken) EncryptToken(ctx context.Context, userKey string, uuid string)
 
 	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)
 	if err != nil {
-		g.Log().Error(ctx, "[GToken]encrypt error token:", tokenStr, err)
-		return Error("encrypt error")
+		g.Log().Error(ctx, msgLog(MsgErrTokenEncrypt), tokenStr, err)
+		return Error(MsgErrTokenEncrypt)
 	}
 
 	return Succ(g.Map{
-		"userKey": userKey,
-		"uuid":    uuid,
-		"token":   gbase64.EncodeToString(token),
+		KeyUserKey: userKey,
+		KeyUuid:    uuid,
+		KeyToken:   gbase64.EncodeToString(token),
 	})
 }
 
 // DecryptToken token解密方法
 func (m *GfToken) DecryptToken(ctx context.Context, token string) Resp {
 	if token == "" {
-		return Fail("decrypt token empty")
+		return Fail(MsgErrTokenEmpty)
 	}
 
 	token64, err := gbase64.Decode([]byte(token))
 	if err != nil {
-		g.Log().Error(ctx, "[GToken]decode error token:", token, err)
-		return Error("decode error")
+		g.Log().Error(ctx, msgLog(MsgErrTokenDecode), token, err)
+		return Error(MsgErrTokenDecode)
 	}
 	decryptToken, err2 := gaes.Decrypt(token64, m.EncryptKey)
 	if err2 != nil {
-		g.Log().Error(ctx, "[GToken]decrypt error token:", token, err2)
-		return Error("decrypt error")
+		g.Log().Error(ctx, msgLog(MsgErrTokenEncrypt), token, err2)
+		return Error(MsgErrTokenEncrypt)
 	}
 	tokenArray := gstr.Split(string(decryptToken), m.TokenDelimiter)
 	if len(tokenArray) < 2 {
-		g.Log().Error(ctx, "[GToken]token len error token:", token)
-		return Error("token len error")
+		g.Log().Error(ctx, msgLog(MsgErrTokenLen), token)
+		return Error(MsgErrTokenLen)
 	}
 
 	return Succ(g.Map{
-		"userKey": tokenArray[0],
-		"uuid":    tokenArray[1],
+		KeyUserKey: tokenArray[0],
+		KeyUuid:    tokenArray[1],
 	})
+}
+
+// InitConfig 初始化配置信息
+func (m *GfToken) InitConfig() bool {
+	if m.CacheMode == 0 {
+		m.CacheMode = CacheModeCache
+	}
+
+	if m.CacheKey == "" {
+		m.CacheKey = DefaultCacheKey
+	}
+
+	if m.Timeout == 0 {
+		m.Timeout = DefaultTimeout
+	}
+
+	if m.MaxRefresh == 0 {
+		m.MaxRefresh = m.Timeout / 2
+	}
+
+	if m.TokenDelimiter == "" {
+		m.TokenDelimiter = DefaultTokenDelimiter
+	}
+
+	if len(m.EncryptKey) == 0 {
+		m.EncryptKey = []byte(DefaultEncryptKey)
+	}
+
+	if m.AuthFailMsg == "" {
+		m.AuthFailMsg = DefaultAuthFailMsg
+	}
+
+	// 设置中间件模式，未设置说明历史版本，通过GlobalMiddleware兼容
+	if m.MiddlewareType == 0 {
+		if m.GlobalMiddleware {
+			m.MiddlewareType = MiddlewareTypeGlobal
+		} else {
+			m.MiddlewareType = MiddlewareTypeBind
+		}
+	}
+
+	if m.LoginAfterFunc == nil {
+		m.LoginAfterFunc = func(r *ghttp.Request, respData Resp) {
+			if !respData.Success() {
+				err := r.Response.WriteJson(respData)
+				if err != nil {
+					g.Log().Error(r.Context(), err)
+				}
+			} else {
+				err := r.Response.WriteJson(Succ(g.Map{
+					KeyToken: respData.GetString(KeyToken),
+				}))
+				if err != nil {
+					g.Log().Error(r.Context(), err)
+				}
+			}
+		}
+	}
+
+	if m.LogoutBeforeFunc == nil {
+		m.LogoutBeforeFunc = func(r *ghttp.Request) bool {
+			return true
+		}
+	}
+
+	if m.LogoutAfterFunc == nil {
+		m.LogoutAfterFunc = func(r *ghttp.Request, respData Resp) {
+			if respData.Success() {
+				err := r.Response.WriteJson(Succ(MsgLogoutSucc))
+				if err != nil {
+					g.Log().Error(r.Context(), err)
+				}
+			} else {
+				err := r.Response.WriteJson(respData)
+				if err != nil {
+					g.Log().Error(r.Context(), err)
+				}
+			}
+		}
+	}
+
+	if m.AuthBeforeFunc == nil {
+		m.AuthBeforeFunc = func(r *ghttp.Request) bool {
+			// 静态页面不拦截
+			if r.IsFileRequest() {
+				return false
+			}
+
+			return true
+		}
+	}
+	if m.AuthAfterFunc == nil {
+		m.AuthAfterFunc = func(r *ghttp.Request, respData Resp) {
+			if respData.Success() {
+				r.Middleware.Next()
+			} else {
+				var params map[string]interface{}
+				if r.Method == http.MethodGet {
+					params = r.GetMap()
+				} else if r.Method == http.MethodPost {
+					params = r.GetMap()
+				} else {
+					r.Response.Writeln(MsgErrReqMethod)
+					return
+				}
+
+				no := gconv.String(gtime.TimestampMilli())
+
+				g.Log().Warning(r.Context(), fmt.Sprintf("[AUTH_%s][url:%s][params:%s][data:%s]",
+					no, r.URL.Path, params, respData.Json()))
+				respData.Msg = m.AuthFailMsg
+				err := r.Response.WriteJson(respData)
+				if err != nil {
+					g.Log().Error(r.Context(), err)
+				}
+				r.ExitAll()
+			}
+		}
+	}
+
+	return true
+}
+
+// Start 启动
+func (m *GfToken) Start() error {
+	if !m.InitConfig() {
+		return errors.New(MsgErrInitFail)
+	}
+
+	ctx := context.Background()
+	g.Log().Info(ctx, msgLog("[params:"+m.String()+"]start... "))
+
+	s := g.Server(m.ServerName)
+
+	// 缓存模式
+	if m.CacheMode > CacheModeRedis {
+		g.Log().Error(ctx, msgLog(MsgErrNotSet, "CacheMode"))
+		return errors.New(fmt.Sprintf(MsgErrNotSet, "CacheMode"))
+	}
+
+	// 认证拦截器
+	if m.AuthPaths == nil {
+		g.Log().Error(ctx, msgLog(MsgErrNotSet, "AuthPaths"))
+		return errors.New(fmt.Sprintf(MsgErrNotSet, "AuthPaths"))
+	}
+
+	// 是否是全局拦截
+	if m.MiddlewareType == MiddlewareTypeGlobal {
+		s.BindMiddlewareDefault(m.authMiddleware)
+	} else {
+		for _, authPath := range m.AuthPaths {
+			tmpPath := authPath
+			if !strings.HasSuffix(authPath, "/*") {
+				tmpPath += "/*"
+			}
+			s.BindMiddleware(tmpPath, m.authMiddleware)
+		}
+	}
+
+	// 登录
+	if m.LoginPath == "" {
+		g.Log().Error(ctx, msgLog(MsgErrNotSet, "LoginPath"))
+		return errors.New(fmt.Sprintf(MsgErrNotSet, "LoginPath"))
+	}
+	if m.LoginBeforeFunc == nil {
+		g.Log().Error(ctx, msgLog(MsgErrNotSet, "LoginBeforeFunc"))
+		return errors.New(fmt.Sprintf(MsgErrNotSet, "LoginBeforeFunc"))
+	}
+	s.BindHandler(m.LoginPath, m.Login)
+
+	// 登出
+	if m.LogoutPath == "" {
+		g.Log().Error(ctx, msgLog(MsgErrNotSet, "LogoutPath"))
+		return errors.New(fmt.Sprintf(MsgErrNotSet, "LogoutPath"))
+	}
+	s.BindHandler(m.LogoutPath, m.Logout)
+
+	return nil
+}
+
+// Stop 结束
+func (m *GfToken) Stop(ctx context.Context) error {
+	g.Log().Info(ctx, "[GToken]stop. ")
+	return nil
 }
 
 // String token解密方法

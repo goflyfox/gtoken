@@ -85,7 +85,7 @@ func initRouter(s *ghttp.Server) {
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
 		GlobalMiddleware: true,                                          // 开启全局拦截
 	}
-	err := gfToken.Start(ctx)
+	err := gfToken.Start()
 	if err != nil {
 		panic(err)
 	}

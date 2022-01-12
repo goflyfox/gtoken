@@ -9,7 +9,7 @@ import (
 
 // Middleware 绑定group
 func (m *GfToken) Middleware(ctx context.Context, group *ghttp.RouterGroup) error {
-	if !m.InitConfig(ctx) {
+	if !m.InitConfig() {
 		return errors.New("InitConfig fail")
 	}
 

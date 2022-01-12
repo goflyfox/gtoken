@@ -174,7 +174,7 @@ func TestEncryptDecryptToken(t *testing.T) {
 	ctx := context.Background()
 
 	gfToken := gtoken.GfToken{}
-	gfToken.InitConfig(ctx)
+	gfToken.InitConfig()
 
 	userKey := "123123"
 	token := gfToken.EncryptToken(ctx, userKey, "")
@@ -202,7 +202,7 @@ func BenchmarkEncryptDecryptToken(b *testing.B) {
 
 	ctx := context.Background()
 	gfToken := gtoken.GfToken{}
-	gfToken.InitConfig(ctx)
+	gfToken.InitConfig()
 
 	userKey := "123123"
 	token := gfToken.EncryptToken(ctx, userKey, "")
