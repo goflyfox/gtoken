@@ -1,6 +1,8 @@
 package gtoken
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
 	CacheModeCache   = 1
@@ -47,5 +49,5 @@ func msgLog(msg string, params ...interface{}) string {
 	if len(params) == 0 {
 		return DefaultLogPrefix + msg
 	}
-	return DefaultLogPrefix + fmt.Sprintf(msg, params)
+	return DefaultLogPrefix + fmt.Sprintf(msg, params...)
 }

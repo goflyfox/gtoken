@@ -224,5 +224,4 @@ func BenchmarkEncryptDecryptToken(b *testing.B) {
 			b.Error("error:", "token decrypt uuid error")
 		}
 	}
-
 }

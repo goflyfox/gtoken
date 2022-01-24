@@ -150,8 +150,8 @@ func (m *GfToken) AuthPath(ctx context.Context, urlPath string) bool {
 	}
 	// 分组拦截，登录接口不拦截
 	if m.MiddlewareType == MiddlewareTypeGroup {
-		if gstr.HasSuffix(urlPath, m.LoginPath) ||
-			gstr.HasSuffix(urlPath, m.LogoutPath) {
+		if (m.LoginPath != "" && gstr.HasSuffix(urlPath, m.LoginPath)) ||
+			(m.LogoutPath != "" && gstr.HasSuffix(urlPath, m.LogoutPath)) {
 			return false
 		}
 	}
