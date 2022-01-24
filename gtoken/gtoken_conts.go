@@ -3,8 +3,10 @@ package gtoken
 import "fmt"
 
 const (
-	CacheModeCache = 1
-	CacheModeRedis = 2
+	CacheModeCache   = 1
+	CacheModeRedis   = 2
+	CacheModeFile    = 3
+	CacheModeFileDat = "gtoken.dat"
 
 	MiddlewareTypeGroup  = 1
 	MiddlewareTypeBind   = 2

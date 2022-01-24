@@ -502,9 +502,14 @@ func (m *GfToken) Start() error {
 	s := g.Server(m.ServerName)
 
 	// 缓存模式
-	if m.CacheMode > CacheModeRedis {
+	if m.CacheMode > CacheModeFile {
 		g.Log().Error(ctx, msgLog(MsgErrNotSet, "CacheMode"))
 		return errors.New(fmt.Sprintf(MsgErrNotSet, "CacheMode"))
+	}
+
+	// 初始化文件缓存
+	if m.CacheMode == 3 {
+		m.initFileCache(ctx)
 	}
 
 	// 认证拦截器

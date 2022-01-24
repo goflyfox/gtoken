@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/util/gconv"
 	"time"
 )
@@ -12,8 +13,11 @@ import (
 // setCache 设置缓存
 func (m *GfToken) setCache(ctx context.Context, cacheKey string, userCache g.Map) Resp {
 	switch m.CacheMode {
-	case CacheModeCache:
+	case CacheModeCache, CacheModeFile:
 		gcache.Set(ctx, cacheKey, userCache, gconv.Duration(m.Timeout)*time.Millisecond)
+		if m.CacheMode == CacheModeFile {
+			m.writeFileCache(ctx)
+		}
 	case CacheModeRedis:
 		cacheValueJson, err1 := gjson.Encode(userCache)
 		if err1 != nil {
@@ -36,7 +40,7 @@ func (m *GfToken) setCache(ctx context.Context, cacheKey string, userCache g.Map
 func (m *GfToken) getCache(ctx context.Context, cacheKey string) Resp {
 	var userCache g.Map
 	switch m.CacheMode {
-	case CacheModeCache:
+	case CacheModeCache, CacheModeFile:
 		userCacheValue, err := gcache.Get(ctx, cacheKey)
 		if err != nil {
 			g.Log().Error(ctx, "[GToken]cache get error", err)
@@ -71,10 +75,13 @@ func (m *GfToken) getCache(ctx context.Context, cacheKey string) Resp {
 // removeCache 删除缓存
 func (m *GfToken) removeCache(ctx context.Context, cacheKey string) Resp {
 	switch m.CacheMode {
-	case CacheModeCache:
+	case CacheModeCache, CacheModeFile:
 		_, err := gcache.Remove(ctx, cacheKey)
 		if err != nil {
 			g.Log().Error(ctx, err)
+		}
+		if m.CacheMode == CacheModeFile {
+			m.writeFileCache(ctx)
 		}
 	case CacheModeRedis:
 		var err error
@@ -88,4 +95,28 @@ func (m *GfToken) removeCache(ctx context.Context, cacheKey string) Resp {
 	}
 
 	return Succ("")
+}
+
+func (m *GfToken) writeFileCache(ctx context.Context) {
+	file := gfile.TempDir(CacheModeFileDat)
+	data, e := gcache.Data(ctx)
+	if e != nil {
+		g.Log().Error(ctx, "[GToken]cache writeFileCache error", e)
+	}
+	gfile.PutContents(file, gjson.New(data).MustToJsonString())
+}
+
+func (m *GfToken) initFileCache(ctx context.Context) {
+	file := gfile.TempDir(CacheModeFileDat)
+	if !gfile.Exists(file) {
+		return
+	}
+	data := gfile.GetContents(file)
+	maps := gconv.Map(data)
+	if maps == nil || len(maps) <= 0 {
+		return
+	}
+	for k, v := range maps {
+		gcache.Set(ctx, k, v, gconv.Duration(m.Timeout)*time.Millisecond)
+	}
 }
