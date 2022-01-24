@@ -9,7 +9,7 @@
 * gitee地址：https://gitee.com/goflyfox/gtoken
 
 ## gtoken优势
-1. gtoken支撑单点应用使用内存存储，也支持集群使用redis存储；完全适用于企业生产级使用；
+1. gtoken支撑单点应用测试使用内存存储，支持个人项目文件存储，也支持企业集群使用redis存储；完全适用于企业生产级使用；
 2. 有效的避免了jwt服务端无法退出问题；
 3. 解决jwt无法作废已颁布的令牌，只能等到令牌过期问题；
 4. 通过用户扩展信息存储在服务端，有效规避了jwt携带大量用户扩展信息导致降低传输效率问题；
@@ -20,7 +20,7 @@
 1. 支持token认证，不强依赖于session和cookie，适用jwt和session认证所有场景；
 2. 支持单机gcache和集群gredis模式；
 ```
-# 缓存模式 1 gcache 2 gredis
+# 缓存模式 1 gcache 2 gredis 3 fileCache
 CacheMode = 2
 ```
 
