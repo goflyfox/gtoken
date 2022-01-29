@@ -66,7 +66,7 @@ func initRouter(s *ghttp.Server) {
 		ServerName:       TestServerName,
 		LoginPath:        "/login",
 		LoginBeforeFunc:  loginFunc,
-		LogoutPath:       "/user/logout",
+		LogoutPath:       "post:/user/logout",
 		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
 		MultiLogin:       MultiLogin.Bool(),
 	}

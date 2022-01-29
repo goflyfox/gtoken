@@ -59,85 +59,88 @@ func TestHello(t *testing.T) {
 }
 
 func TestSystemUser(t *testing.T) {
-	// 未登录
-	t.Log("1. not login and visit user")
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/system/user", "username="+Username); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
+	t.Run("TestSystemUser", func(t *testing.T) {
+		// 未登录
+		t.Log("1. not login and visit user")
+		if r, e := g.Client().Post(context.TODO(), TestURL+"/system/user", "username="+Username); e != nil {
+			t.Error("error:", e)
+		} else {
+			defer r.Close()
 
-		content := string(r.ReadAll())
-		t.Log(content)
+			content := string(r.ReadAll())
+			t.Log(content)
 
-		var respData gtoken.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
+			var respData gtoken.Resp
+			err := json.Unmarshal([]byte(content), &respData)
+			if err != nil {
+				t.Error("error:", err)
+			}
+			if respData.Success() {
+				t.Error("error:", respData.Json())
+			}
 		}
-		if respData.Success() {
-			t.Error("error:", respData.Json())
+
+		// 登录，访问用户信息
+		t.Log("2. execute login and visit user")
+		data := Post(t, "/system/user")
+		if data.Success() {
+			t.Log(data.Json())
+		} else {
+			t.Error("error:", data.Json())
 		}
-	}
 
-	// 登录，访问用户信息
-	t.Log("2. execute login and visit user")
-	data := Post(t, "/system/user")
-	if data.Success() {
-		t.Log(data.Json())
-	} else {
-		t.Error("error:", data.Json())
-	}
+		// 登录，获取用户信息
+		t.Log("2. execute get user data")
+		data = Post(t, "/user/data")
+		if data.Success() {
+			t.Log(data.Json())
+		} else {
+			t.Error("error:", data.Json())
+		}
 
-	// 登录，获取用户信息
-	t.Log("2. execute get user data")
-	data = Post(t, "/user/data")
-	if data.Success() {
-		t.Log(data.Json())
-	} else {
-		t.Error("error:", data.Json())
-	}
+		// 登出
+		t.Log("3. execute logout")
+		data = Post(t, "/user/logout")
+		if data.Success() {
+			t.Log(data.Json())
+		} else {
+			t.Error("error:", data.Json())
+		}
 
-	// 登出
-	t.Log("3. execute logout")
-	data = Post(t, "/user/logout")
-	if data.Success() {
-		t.Log(data.Json())
-	} else {
-		t.Error("error:", data.Json())
-	}
-
-	// 登出访问用户信息
-	t.Log("4. visit user")
-	data = Post(t, "/system/user", "username="+Username)
-	if data.Success() {
-		t.Error("error:", data.Json())
-	} else {
-		t.Log(data.Json())
-	}
-	delete(Token, Username)
+		// 登出访问用户信息
+		t.Log("4. visit user")
+		data = Post(t, "/system/user", "username="+Username)
+		if data.Success() {
+			t.Error("error:", data.Json())
+		} else {
+			t.Log(data.Json())
+		}
+		delete(Token, Username)
+	})
 }
 
 func TestUserLoginFail(t *testing.T) {
-	// 登录失败
-	t.Log("1. login fail ")
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/login", "username=&passwd="); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
+	t.Run("TestUserLoginFail", func(t *testing.T) {
+		// 登录失败
+		t.Log("1. login fail ")
+		if r, e := g.Client().Post(context.TODO(), TestURL+"/login", "username=&passwd="); e != nil {
+			t.Error("error:", e)
+		} else {
+			defer r.Close()
 
-		content := string(r.ReadAll())
+			content := string(r.ReadAll())
 
-		var respData gtoken.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
+			var respData gtoken.Resp
+			err := json.Unmarshal([]byte(content), &respData)
+			if err != nil {
+				t.Error("error:", err)
+			}
+
+			if respData.Success() {
+				t.Error("error:", "login fail:"+respData.Json())
+			}
 		}
-
-		if respData.Success() {
-			t.Error("error:", "login fail:"+respData.Json())
-		}
-	}
-
+	})
 }
 
 func TestExclude(t *testing.T) {

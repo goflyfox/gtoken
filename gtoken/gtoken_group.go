@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Middleware 绑定group
@@ -34,8 +35,20 @@ func (m *GfToken) Middleware(ctx context.Context, group *ghttp.RouterGroup) erro
 	}
 
 	group.Middleware(m.authMiddleware)
-	group.ALL(m.LoginPath, m.Login)
-	group.ALL(m.LogoutPath, m.Logout)
+
+	registerFunc(ctx, group, m.LoginPath, m.Login)
+	registerFunc(ctx, group, m.LogoutPath, m.Logout)
 
 	return nil
+}
+
+// 如果包含请求方式，按照请求方式注册；默认注册所有
+func registerFunc(ctx context.Context, group *ghttp.RouterGroup, pattern string, object interface{}) {
+	if gstr.Contains(pattern, ":") || gstr.Contains(pattern, "@") {
+		group.Map(map[string]interface{}{
+			pattern: object,
+		})
+	} else {
+		group.ALL(pattern, object)
+	}
 }
