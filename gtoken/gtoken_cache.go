@@ -2,12 +2,13 @@ package gtoken
 
 import (
 	"context"
+	"time"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/util/gconv"
-	"time"
 )
 
 // setCache 设置缓存
@@ -98,7 +99,7 @@ func (m *GfToken) removeCache(ctx context.Context, cacheKey string) Resp {
 }
 
 func (m *GfToken) writeFileCache(ctx context.Context) {
-	file := gfile.TempDir(CacheModeFileDat)
+	file := gfile.Temp(CacheModeFileDat)
 	data, e := gcache.Data(ctx)
 	if e != nil {
 		g.Log().Error(ctx, "[GToken]cache writeFileCache error", e)
@@ -107,7 +108,7 @@ func (m *GfToken) writeFileCache(ctx context.Context) {
 }
 
 func (m *GfToken) initFileCache(ctx context.Context) {
-	file := gfile.TempDir(CacheModeFileDat)
+	file := gfile.Temp(CacheModeFileDat)
 	if !gfile.Exists(file) {
 		return
 	}
