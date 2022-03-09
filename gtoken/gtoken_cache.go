@@ -46,7 +46,7 @@ func (m *GfToken) getCache(ctx context.Context, cacheKey string) Resp {
 			g.Log().Error(ctx, "[GToken]cache get error", err)
 			return Error("cache get error")
 		}
-		if userCacheValue == nil {
+		if userCacheValue.IsNil() {
 			return Unauthorized("login timeout or not login", "")
 		}
 		userCache = gconv.Map(userCacheValue)
@@ -56,7 +56,7 @@ func (m *GfToken) getCache(ctx context.Context, cacheKey string) Resp {
 			g.Log().Error(ctx, "[GToken]cache get error", err)
 			return Error("cache get error")
 		}
-		if userCacheJson == nil {
+		if userCacheJson.IsNil() {
 			return Unauthorized("login timeout or not login", "")
 		}
 
