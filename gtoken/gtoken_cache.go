@@ -98,7 +98,7 @@ func (m *GfToken) removeCache(ctx context.Context, cacheKey string) Resp {
 }
 
 func (m *GfToken) writeFileCache(ctx context.Context) {
-	file := gfile.TempDir(CacheModeFileDat)
+	file := gfile.Temp(CacheModeFileDat)
 	data, e := gcache.Data(ctx)
 	if e != nil {
 		g.Log().Error(ctx, "[GToken]cache writeFileCache error", e)
@@ -107,7 +107,7 @@ func (m *GfToken) writeFileCache(ctx context.Context) {
 }
 
 func (m *GfToken) initFileCache(ctx context.Context) {
-	file := gfile.TempDir(CacheModeFileDat)
+	file := gfile.Temp(CacheModeFileDat)
 	if !gfile.Exists(file) {
 		return
 	}
