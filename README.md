@@ -235,7 +235,7 @@ UNAUTHORIZED = -401  // 未认证
 
 ## 文档
 
-https://itician.org/pages/viewpage.action?pageId=1115974
+https://goframe.org/pages/viewpage.action?pageId=1115974
 
 ## 感谢
 
