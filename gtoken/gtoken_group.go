@@ -19,7 +19,7 @@ func (m *GfToken) Middleware(ctx context.Context, group *ghttp.RouterGroup) erro
 	g.Log().Info(ctx, "[GToken][params:"+m.String()+"]start... ")
 
 	// 缓存模式
-	if m.CacheMode > CacheModeRedis {
+	if m.CacheMode > CacheModeFile {
 		g.Log().Error(ctx, "[GToken]CacheMode set error")
 		return errors.New("CacheMode set error")
 	}

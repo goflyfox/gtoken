@@ -210,28 +210,28 @@ UNAUTHORIZED = -401  // 未认证
 
 具体可参考`GfToken`结构体，字段解释如下：
 
-| 名称             | 配置字段         | 说明                                                    | 分组中间件 | 全局中间件 |
-| ---------------- | ---------------- | ------------------------------------------------------- | ---------- | ---------- |
-| 服务名           | ServerName       | 默认空即可                                              | 支持       | 支持       |
-| 缓存模式         | CacheMode        | 1 gcache 2 gredis 默认1                                 | 支持       | 支持       |
-| 缓存key          | CacheKey         | 默认缓存前缀`GToken:`                                   | 支持       | 支持       |
-| 超时时间         | Timeout          | 默认10天（毫秒）                                        | 支持       | 支持       |
-| 缓存刷新时间     | MaxRefresh       | 默认为超时时间的一半（毫秒）                            | 支持       | 支持       |
-| Token分隔符      | TokenDelimiter   | 默认`_`                                                 | 支持       | 支持       |
-| Token加密key     | EncryptKey       | 默认`12345678912345678912345678912345`                  | 支持       | 支持       |
-| 认证失败提示     | AuthFailMsg      | 默认`请求错误或登录超时`                                | 支持       | 支持       |
-| 是否支持多端登录 | MultiLogin       | 默认false                                               | 支持       | 支持       |
+| 名称             | 配置字段         | 说明                                       | 分组中间件 | 全局中间件 |
+| ---------------- | ---------------- |------------------------------------------| ---------- | ---------- |
+| 服务名           | ServerName       | 默认空即可                                    | 支持       | 支持       |
+| 缓存模式         | CacheMode        | 1 gcache 2 gredis 3 fileCache 默认1                   | 支持       | 支持       |
+| 缓存key          | CacheKey         | 默认缓存前缀`GToken:`                          | 支持       | 支持       |
+| 超时时间         | Timeout          | 默认10天（毫秒）                                | 支持       | 支持       |
+| 缓存刷新时间     | MaxRefresh       | 默认为超时时间的一半（毫秒）                           | 支持       | 支持       |
+| Token分隔符      | TokenDelimiter   | 默认`_`                                    | 支持       | 支持       |
+| Token加密key     | EncryptKey       | 默认`12345678912345678912345678912345`     | 支持       | 支持       |
+| 认证失败提示     | AuthFailMsg      | 默认`请求错误或登录超时`                            | 支持       | 支持       |
+| 是否支持多端登录 | MultiLogin       | 默认false                                  | 支持       | 支持       |
 | 中间件类型       | MiddlewareType   | 1、Group 2、Bind 3 、Global；<br>使用分组模式不需要设置 | 支持       | 支持       |
-| 登录路径         | LoginPath        | 登录接口路径                                            | 支持       | 支持       |
-| 登录验证方法     | LoginBeforeFunc  | 登录验证需要用户实现方法                                | 支持       | 支持       |
-| 登录返回方法     | LoginAfterFunc   | 登录完成后调用                                          | 支持       | 支持       |
-| 登出地址         | LogoutPath       | 登出接口路径                                            | 支持       | 支持       |
-| 登出验证方法     | LogoutBeforeFunc | 登出接口前调用                                          | 支持       | 支持       |
-| 登出返回方法     | LogoutAfterFunc  | 登出接口完成后调用                                      | 支持       | 支持       |
-| 拦截地址         | AuthPaths        | 此路径列表进行认证                                      | 不需要     | 支持       |
-| 拦截排除地址     | AuthExcludePaths | 此路径列表不进行认证                                    | 支持       | 支持       |
-| 认证验证方法     | AuthBeforeFunc   | 拦截认证前后调用                                        | 支持       | 支持       |
-| 认证返回方法     | AuthAfterFunc    | 拦截认证完成后调用                                      | 支持       | 支持       |
+| 登录路径         | LoginPath        | 登录接口路径                                   | 支持       | 支持       |
+| 登录验证方法     | LoginBeforeFunc  | 登录验证需要用户实现方法                             | 支持       | 支持       |
+| 登录返回方法     | LoginAfterFunc   | 登录完成后调用                                  | 支持       | 支持       |
+| 登出地址         | LogoutPath       | 登出接口路径                                   | 支持       | 支持       |
+| 登出验证方法     | LogoutBeforeFunc | 登出接口前调用                                  | 支持       | 支持       |
+| 登出返回方法     | LogoutAfterFunc  | 登出接口完成后调用                                | 支持       | 支持       |
+| 拦截地址         | AuthPaths        | 此路径列表进行认证                                | 不需要     | 支持       |
+| 拦截排除地址     | AuthExcludePaths | 此路径列表不进行认证                               | 支持       | 支持       |
+| 认证验证方法     | AuthBeforeFunc   | 拦截认证前后调用                                 | 支持       | 支持       |
+| 认证返回方法     | AuthAfterFunc    | 拦截认证完成后调用                                | 支持       | 支持       |
 
 ## 文档
 
