@@ -269,7 +269,9 @@ func (m *GfToken) validToken(ctx context.Context, token string) Resp {
 	}
 
 	if uuid != userCacheResp.GetString(KeyUuid) {
-		g.Log().Error(ctx, msgLog(MsgErrAuthUuid)+", decryptToken:"+decryptToken.Json()+" cacheValue:"+gconv.String(userCacheResp.Data))
+		// 修正日志无法捕获，从而导致大量无用的日志塞满硬盘
+		// 当传入的token过期或无效时会触发。
+		//g.Log().Error(ctx, msgLog(MsgErrAuthUuid)+", decryptToken:"+decryptToken.Json()+" cacheValue:"+gconv.String(userCacheResp.Data))
 		return Unauthorized(MsgErrAuthUuid, "")
 	}
 
