@@ -23,9 +23,19 @@ func (m *GfToken) Middleware(group *ghttp.RouterGroup) error {
 		return errors.New("CacheMode set error")
 	}
 	// 登录
-	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
-		g.Log().Error("[GToken]LoginPath or LoginBeforeFunc not set")
-		return errors.New("LoginPath or LoginBeforeFunc not set")
+	// if m.LoginPath == "" || m.LoginBeforeFunc == nil {
+	//	g.Log().Error("[GToken]LoginPath or LoginBeforeFunc not set")
+	//	return errors.New("LoginPath or LoginBeforeFunc not set")
+	// }
+	if m.LoginPathMap == nil {
+		m.LoginPathMap = make(map[string]LoginBeforeFunction)
+	}
+	if m.LoginPath != "" && m.LoginBeforeFunc != nil {
+		m.LoginPathMap[m.LoginPath] = m.LoginBeforeFunc
+	}
+	if m.LoginPathMap == nil || len(m.LoginPathMap) == 0 {
+		g.Log().Error("[GToken]LoginPath or LoginBeforeFunc or LoginPathMap not set")
+		return errors.New("LoginPath or LoginBeforeFunc or LoginPathMap not set")
 	}
 	// 登出
 	if m.LogoutPath == "" {
@@ -35,7 +45,10 @@ func (m *GfToken) Middleware(group *ghttp.RouterGroup) error {
 
 	group.Middleware(m.authMiddleware)
 
-	registerFunc(group, m.LoginPath, m.Login)
+	// registerFunc(group, m.LoginPath, m.Login) 改用下面的方式注册
+	for loginPath, _ := range m.LoginPathMap {
+		registerFunc(group, loginPath, m.Login)
+	}
 	registerFunc(group, m.LogoutPath, m.Logout)
 
 	return nil
@@ -51,3 +64,4 @@ func registerFunc(group *ghttp.RouterGroup, pattern string, object interface{}) 
 		group.ALL(pattern, object)
 	}
 }
+

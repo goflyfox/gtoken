@@ -31,6 +31,7 @@ const (
 	DefaultAuthFailMsg    = "请求错误或登录超时"
 )
 
+type LoginBeforeFunction func(r *ghttp.Request) (string, interface{})
 // GfToken gtoken结构体
 type GfToken struct {
 	// GoFrame server name
@@ -59,7 +60,8 @@ type GfToken struct {
 	// 登录路径
 	LoginPath string
 	// 登录验证方法 return userKey 用户标识 如果userKey为空，结束执行
-	LoginBeforeFunc func(r *ghttp.Request) (string, interface{})
+	LoginBeforeFunc LoginBeforeFunction
+	LoginPathMap map[string]LoginBeforeFunction
 	// 登录返回方法
 	LoginAfterFunc func(r *ghttp.Request, respData Resp)
 	// 登出地址
@@ -235,11 +237,23 @@ func (m *GfToken) Start() error {
 	}
 
 	// 登录
-	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
-		g.Log().Error("[GToken]LoginPath or LoginBeforeFunc not set")
-		return errors.New("LoginPath or LoginBeforeFunc not set")
+	if m.LoginPathMap == nil {
+		m.LoginPathMap = make(map[string]LoginBeforeFunction)
 	}
-	s.BindHandler(m.LoginPath, m.Login)
+	if m.LoginPath != "" && m.LoginBeforeFunc != nil {
+		m.LoginPathMap[m.LoginPath] = m.LoginBeforeFunc
+	}
+	// if m.LoginPath == "" || m.LoginBeforeFunc == nil {
+	if m.LoginPathMap == nil || len(m.LoginPathMap) == 0 {
+			g.Log().Error("[GToken]LoginPath or LoginBeforeFunc or LoginPathMap not set")
+			return errors.New("LoginPath or LoginBeforeFunc or LoginPathMap not set")
+	} else {
+		for key, _ := range m.LoginPathMap {
+			s.BindHandler(key, m.Login)
+		}
+	}
+	//}
+
 
 	// 登出
 	if m.LogoutPath == "" {
@@ -270,7 +284,21 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 
 // Login 登录
 func (m *GfToken) Login(r *ghttp.Request) {
-	userKey, data := m.LoginBeforeFunc(r)
+	reqUri := r.RequestURI
+	beforeFunc := m.LoginPathMap[reqUri]
+	if beforeFunc == nil {
+		for loginPath, fVal := range m.LoginPathMap {
+			if strings.HasSuffix(reqUri, loginPath) {
+				beforeFunc = fVal
+				break
+			}
+		}
+		if beforeFunc == nil {
+			g.Log().Error("[GToken]Login before function not set")
+			return
+		}
+	}
+	userKey, data := beforeFunc(r)
 	if userKey == "" {
 		g.Log().Error("[GToken]Login userKey is empty")
 		return
@@ -341,9 +369,11 @@ func (m *GfToken) AuthPath(urlPath string) bool {
 	}
 	// 分组拦截，登录接口不拦截
 	if m.MiddlewareType == MiddlewareTypeGroup {
-		if gstr.HasSuffix(urlPath, m.LoginPath) ||
-			gstr.HasSuffix(urlPath, m.LogoutPath) {
-			return false
+		for loginPath, _ := range m.LoginPathMap {
+			if gstr.HasSuffix(urlPath, loginPath) ||
+				gstr.HasSuffix(urlPath, m.LogoutPath) {
+				return false
+			}
 		}
 	}
 
