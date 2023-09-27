@@ -269,7 +269,7 @@ func (m *GfToken) validToken(ctx context.Context, token string) Resp {
 	}
 
 	if uuid != userCacheResp.GetString(KeyUuid) {
-		g.Log().Error(ctx, msgLog(MsgErrAuthUuid)+", decryptToken:"+decryptToken.Json()+" cacheValue:"+gconv.String(userCacheResp.Data))
+		g.Log().Debug(ctx, msgLog(MsgErrAuthUuid)+", decryptToken:"+decryptToken.Json()+" cacheValue:"+gconv.String(userCacheResp.Data))
 		return Unauthorized(MsgErrAuthUuid, "")
 	}
 
@@ -551,7 +551,6 @@ func (m *GfToken) String() string {
 		"CacheKey":         m.CacheKey,
 		"Timeout":          m.Timeout,
 		"TokenDelimiter":   m.TokenDelimiter,
-		"EncryptKey":       string(m.EncryptKey),
 		"AuthFailMsg":      m.AuthFailMsg,
 		"MultiLogin":       m.MultiLogin,
 		"MiddlewareType":   m.MiddlewareType,
