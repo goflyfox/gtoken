@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -203,7 +204,13 @@ func (m *GfToken) AuthPath(ctx context.Context, urlPath string) bool {
 
 // getRequestToken 返回请求Token
 func (m *GfToken) getRequestToken(r *ghttp.Request) Resp {
-	authHeader := r.Header.Get("Authorization")
+	var authHeader string
+	if r.GetHeader("Connection") == "Upgrade" && r.GetHeader("Upgrade") == "websocket" {
+		authHeader, _ = url.QueryUnescape(r.Header.Get("Sec-WebSocket-Protocol"))
+	} else {
+		authHeader = r.Header.Get("Authorization")
+	}
+
 	if authHeader != "" {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
