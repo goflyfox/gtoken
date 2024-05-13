@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gogf/gf/v2/crypto/gaes"
 	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/encoding/gbase64"
@@ -13,8 +16,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
-	"net/http"
-	"strings"
 )
 
 // GfToken gtoken结构体
@@ -107,8 +108,7 @@ func (m *GfToken) Logout(r *ghttp.Request) {
 
 // AuthMiddleware 认证拦截
 func (m *GfToken) authMiddleware(r *ghttp.Request) {
-	urlPath := r.URL.Path
-	if !m.AuthPath(r.Context(), urlPath) {
+	if !m.AuthPath(r.Context(), r) {
 		// 如果不需要认证，继续
 		r.Middleware.Next()
 		return
@@ -143,7 +143,11 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 
 // AuthPath 判断路径是否需要进行认证拦截
 // return true 需要认证
-func (m *GfToken) AuthPath(ctx context.Context, urlPath string) bool {
+func (m *GfToken) AuthPath(ctx context.Context, r *ghttp.Request) bool {
+	urlPath := r.URL.Path
+	// 拉取Method
+	method := r.Method
+
 	// 去除后斜杠
 	if strings.HasSuffix(urlPath, "/") {
 		urlPath = gstr.SubStr(urlPath, 0, len(urlPath)-1)
@@ -178,22 +182,54 @@ func (m *GfToken) AuthPath(ctx context.Context, urlPath string) bool {
 
 	// 排除路径处理，到这里nextFlag为true
 	for _, excludePath := range m.AuthExcludePaths {
-		tmpPath := excludePath
-		// 前缀匹配
-		if strings.HasSuffix(tmpPath, "/*") {
-			tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-2)
-			if gstr.HasPrefix(urlPath, tmpPath) {
-				// 前缀匹配不拦截
-				return false
+		// excludePath 以:分割为数组
+		excludePathArr := gstr.Split(excludePath, ":")
+
+		var tmpPath string
+		var tmpMethod string
+
+		if len(excludePathArr) == 2 {
+			tmpMethod = excludePathArr[0]
+			tmpPath = excludePathArr[1]
+		} else {
+			tmpPath = excludePathArr[0]
+		}
+
+		if tmpMethod == "" {
+			// 前缀匹配
+			if strings.HasSuffix(tmpPath, "/*") {
+				tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-2)
+				if gstr.HasPrefix(urlPath, tmpPath) {
+					// 前缀匹配不拦截
+					return false
+				}
+			} else {
+				// 全路径匹配
+				if strings.HasSuffix(tmpPath, "/") {
+					tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-1)
+				}
+				if urlPath == tmpPath {
+					// 全路径匹配不拦截
+					return false
+				}
 			}
 		} else {
-			// 全路径匹配
-			if strings.HasSuffix(tmpPath, "/") {
-				tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-1)
-			}
-			if urlPath == tmpPath {
-				// 全路径匹配不拦截
-				return false
+			// 前缀匹配
+			if strings.HasSuffix(tmpPath, "/*") {
+				tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-2)
+				if gstr.HasPrefix(urlPath, tmpPath) && method == tmpMethod {
+					// 前缀匹配不拦截
+					return false
+				}
+			} else {
+				// 全路径匹配
+				if strings.HasSuffix(tmpPath, "/") {
+					tmpPath = gstr.SubStr(tmpPath, 0, len(tmpPath)-1)
+				}
+				if urlPath == tmpPath && method == tmpMethod {
+					// 全路径匹配不拦截
+					return false
+				}
 			}
 		}
 	}
