@@ -22,12 +22,10 @@ const (
 
 	TraceId = "d5dfce77cdff812161134e55de3c5207"
 
-	KeyUserKey     = "userKey"
-	KeyRefreshTime = "refreshTime"
-	KeyCreateTime  = "createTime"
-	KeyUuid        = "uuid"
-	KeyData        = "data"
-	KeyToken       = "token"
+	KeyUserKey    = "userKey"
+	KeyCreateTime = "createTime"
+	KeyData       = "data"
+	KeyToken      = "token"
 )
 
 const (
@@ -42,7 +40,7 @@ const (
 	MsgErrTokenEncrypt = "token encrypt error"
 	MsgErrTokenDecode  = "token decode error"
 	MsgErrTokenLen     = "token len error"
-	MsgErrAuthUuid     = "user auth uuid error"
+	MsgErrValidate     = "user validate error"
 	MsgErrDataEmpty    = "cache data empty"
 )
 

@@ -29,10 +29,10 @@ type DefaultCache struct {
 	// 缓存key前缀
 	PreKey string
 	// 超时时间 默认10天（毫秒）
-	Timeout int
+	Timeout int64
 }
 
-func NewDefaultCache(mode int8, preKey string, timeout int) *DefaultCache {
+func NewDefaultCache(mode int8, preKey string, timeout int64) *DefaultCache {
 	c := &DefaultCache{
 		Mode:    mode,
 		PreKey:  preKey,

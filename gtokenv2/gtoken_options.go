@@ -8,9 +8,9 @@ type Options struct {
 	// 缓存key前缀
 	CachePreKey string
 	// 超时时间 默认10天（毫秒）
-	Timeout int
+	Timeout int64
 	// 缓存刷新时间 默认为超时时间的一半（毫秒）
-	MaxRefresh int
+	MaxRefresh int64
 	// Token分隔符
 	TokenDelimiter string
 	// Token加密key

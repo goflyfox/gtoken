@@ -2,8 +2,8 @@ package gtokenv2
 
 import (
 	"context"
+	"errors"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -31,10 +31,10 @@ func (m *GfToken) Generate(ctx context.Context, userKey string, data any) (token
 		return "", err
 	}
 	userCache := g.Map{
-		KeyUserKey:     userKey,
-		KeyData:        data,
-		KeyCreateTime:  gtime.Now().TimestampMilli(),
-		KeyRefreshTime: gtime.Now().TimestampMilli(),
+		KeyUserKey:    userKey,
+		KeyToken:      token,
+		KeyData:       data,
+		KeyCreateTime: gtime.Now().TimestampMilli(),
 	}
 
 	err = m.Cache.Set(ctx, userKey, userCache)
@@ -46,21 +46,55 @@ func (m *GfToken) Generate(ctx context.Context, userKey string, data any) (token
 }
 
 // Validate 验证 Token
-func (m *GfToken) Validate(r *ghttp.Request) (err error) {
+func (m *GfToken) Validate(ctx context.Context, token string) (err error) {
+	if token == "" {
+		return errors.New(MsgErrTokenEmpty)
+	}
+
+	var userKey string
+	userKey, err = m.Codec.Decrypt(ctx, token)
+	if err != nil {
+		return err
+	}
+	userCache, err := m.Cache.Get(ctx, userKey)
+	if err != nil {
+		return err
+	}
+	if userCache != nil {
+		return errors.New(MsgErrValidate)
+	}
+	if token != userCache[KeyToken] {
+		return errors.New(MsgErrValidate)
+	}
+
 	return nil
 }
 
 // Get 通过userKey获取Token
 func (m *GfToken) Get(ctx context.Context, userKey string) (token string, data any, err error) {
-	return "234", nil, nil
-}
+	userCache, err := m.Cache.Get(ctx, userKey)
+	if err != nil {
+		return "", nil, err
+	}
+	if userCache != nil {
+		return "", nil, errors.New(MsgErrValidate)
+	}
 
-// Refresh 刷新token的缓存有效期
-func (m *GfToken) Refresh(oldToken string) (newToken string, err error) {
-	return "234", nil
+	nowTime := gtime.Now().TimestampMilli()
+	createTime := userCache[KeyCreateTime]
+
+	// 需要进行缓存超时时间刷新
+	if m.Options.MaxRefresh > 0 && nowTime > gconv.Int64(createTime)+m.Options.MaxRefresh {
+		userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
+		err = m.Cache.Set(ctx, userKey, userCache)
+		if err != nil {
+			return "", nil, err
+		}
+	}
+	return gconv.String(userCache[KeyToken]), userCache[KeyData], nil
 }
 
 // Destroy 销毁Token
-func (m *GfToken) Destroy(r *ghttp.Request) (err error) {
-	return nil
+func (m *GfToken) Destroy(ctx context.Context, userKey string) error {
+	return m.Cache.Remove(ctx, userKey)
 }
