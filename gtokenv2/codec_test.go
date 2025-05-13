@@ -1,18 +1,16 @@
-package gtoken_test
+package gtokenv2_test
 
 import (
-	"github.com/goflyfox/gtoken/gtoken"
+	"github.com/goflyfox/gtoken/gtokenv2"
 	"github.com/gogf/gf/v2/os/gctx"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// 测试结构体
-
-func Test_DefaultCodec_Encode(t *testing.T) {
+func TestDefaultCodec(t *testing.T) {
 	// 默认编解码器
-	codec := gtoken.NewDefaultCodec("_", []byte("koi29a83idakguqjq29asd9asd8a7jhq"))
+	codec := gtokenv2.NewDefaultCodec("_", []byte("koi29a83idakguqjq29asd9asd8a7jhq"))
 	ctx := gctx.New()
 	type TestStruct struct {
 		UserKey string
