@@ -4,15 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/v2/crypto/gaes"
-	"github.com/gogf/gf/v2/crypto/gmd5"
-	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/goflyfox/gtoken/gtokenv2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/grand"
 	"net/http"
 	"strings"
 )
@@ -63,6 +60,8 @@ type GfToken struct {
 	AuthBeforeFunc func(r *ghttp.Request) bool
 	// 认证返回方法
 	AuthAfterFunc func(r *ghttp.Request, respData Resp)
+
+	GfTokenV2 *gtokenv2.GfTokenV2
 }
 
 // Login 登录
@@ -75,18 +74,26 @@ func (m *GfToken) Login(r *ghttp.Request) {
 
 	if m.MultiLogin {
 		// 支持多端重复登录，返回相同token
-		userCacheResp := m.getToken(r.Context(), userKey)
-		if userCacheResp.Success() {
-			respToken := m.EncryptToken(r.Context(), userKey, userCacheResp.GetString(KeyUuid))
-			m.LoginAfterFunc(r, respToken)
+		token, _, err := m.GfTokenV2.Get(r.Context(), userKey)
+		if err == nil && token != "" {
+			m.LoginAfterFunc(r, Succ(g.Map{
+				KeyUserKey: userKey,
+				KeyToken:   token,
+			}))
 			return
 		}
 	}
 
 	// 生成token
-	respToken := m.genToken(r.Context(), userKey, data)
-	m.LoginAfterFunc(r, respToken)
-
+	token, err := m.GfTokenV2.Generate(r.Context(), userKey, data)
+	if err != nil {
+		m.LoginAfterFunc(r, Error(err.Error()))
+		return
+	}
+	m.LoginAfterFunc(r, Succ(g.Map{
+		KeyUserKey: userKey,
+		KeyToken:   token,
+	}))
 }
 
 // Logout 登出
@@ -99,7 +106,7 @@ func (m *GfToken) Logout(r *ghttp.Request) {
 	respData := m.getRequestToken(r)
 	if respData.Success() {
 		// 删除token
-		m.RemoveToken(r.Context(), respData.DataString())
+		_ = m.GfTokenV2.DestroyByToken(r.Context(), respData.DataString())
 	}
 
 	m.LogoutAfterFunc(r, respData)
@@ -123,8 +130,25 @@ func (m *GfToken) authMiddleware(r *ghttp.Request) {
 	// 获取请求token
 	tokenResp := m.getRequestToken(r)
 	if tokenResp.Success() {
-		// 验证token
-		tokenResp = m.validToken(r.Context(), tokenResp.DataString())
+		token := tokenResp.DataString()
+		err := m.GfTokenV2.Validate(r.Context(), token)
+		if err != nil {
+			// 验证token
+			tokenResp = Unauthorized(err.Error(), "")
+		} else {
+			// 支持多端重复登录，返回相同token
+			userKey, err := m.GfTokenV2.GetUserKey(r.Context(), token)
+			if err != nil {
+				m.LoginAfterFunc(r, Error(err.Error()))
+				return
+			}
+
+			tokenResp = Succ(g.Map{
+				KeyUserKey: userKey,
+				KeyToken:   token,
+			})
+		}
+
 	}
 
 	m.AuthAfterFunc(r, tokenResp)
@@ -134,8 +158,10 @@ func (m *GfToken) authMiddleware(r *ghttp.Request) {
 func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 	respData := m.getRequestToken(r)
 	if respData.Success() {
-		// 验证token
-		respData = m.validToken(r.Context(), respData.DataString())
+		err := m.GfTokenV2.Validate(r.Context(), respData.DataString())
+		if err != nil {
+			return Error(err.Error())
+		}
 	}
 
 	return respData
@@ -223,150 +249,6 @@ func (m *GfToken) getRequestToken(r *ghttp.Request) Resp {
 	}
 	return Succ(authHeader)
 
-}
-
-// genToken 生成Token
-func (m *GfToken) genToken(ctx context.Context, userKey string, data interface{}) Resp {
-	token := m.EncryptToken(ctx, userKey, "")
-	if !token.Success() {
-		return token
-	}
-
-	cacheKey := m.CacheKey + userKey
-	userCache := g.Map{
-		KeyUserKey:     userKey,
-		KeyUuid:        token.GetString(KeyUuid),
-		KeyData:        data,
-		KeyCreateTime:  gtime.Now().TimestampMilli(),
-		KeyRefreshTime: gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh),
-	}
-
-	cacheResp := m.setCache(ctx, cacheKey, userCache)
-	if !cacheResp.Success() {
-		return cacheResp
-	}
-
-	return token
-}
-
-// validToken 验证Token
-func (m *GfToken) validToken(ctx context.Context, token string) Resp {
-	if token == "" {
-		return Unauthorized(MsgErrTokenEmpty, "")
-	}
-
-	decryptToken := m.DecryptToken(ctx, token)
-	if !decryptToken.Success() {
-		return decryptToken
-	}
-
-	userKey := decryptToken.GetString(KeyUserKey)
-	uuid := decryptToken.GetString(KeyUuid)
-
-	userCacheResp := m.getToken(ctx, userKey)
-	if !userCacheResp.Success() {
-		return userCacheResp
-	}
-
-	if uuid != userCacheResp.GetString(KeyUuid) {
-		g.Log().Debug(ctx, msgLog(MsgErrAuthUuid)+", decryptToken:"+decryptToken.Json()+" cacheValue:"+gconv.String(userCacheResp.Data))
-		return Unauthorized(MsgErrAuthUuid, "")
-	}
-
-	return userCacheResp
-}
-
-// getToken 通过userKey获取Token
-func (m *GfToken) getToken(ctx context.Context, userKey string) Resp {
-	cacheKey := m.CacheKey + userKey
-
-	userCacheResp := m.getCache(ctx, cacheKey)
-	if !userCacheResp.Success() {
-		return userCacheResp
-	}
-	userCache := gconv.Map(userCacheResp.Data)
-
-	nowTime := gtime.Now().TimestampMilli()
-	refreshTime := userCache[KeyRefreshTime]
-
-	// 需要进行缓存超时时间刷新
-	if gconv.Int64(refreshTime) == 0 || nowTime > gconv.Int64(refreshTime) {
-		userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
-		userCache[KeyRefreshTime] = gtime.Now().TimestampMilli() + gconv.Int64(m.MaxRefresh)
-		return m.setCache(ctx, cacheKey, userCache)
-	}
-
-	return Succ(userCache)
-}
-
-// RemoveToken 删除Token
-func (m *GfToken) RemoveToken(ctx context.Context, token string) Resp {
-	decryptToken := m.DecryptToken(ctx, token)
-	if !decryptToken.Success() {
-		return decryptToken
-	}
-
-	cacheKey := m.CacheKey + decryptToken.GetString(KeyUserKey)
-	return m.removeCache(ctx, cacheKey)
-}
-
-// EncryptToken token加密方法
-func (m *GfToken) EncryptToken(ctx context.Context, userKey string, uuid string) Resp {
-	if userKey == "" {
-		return Fail(MsgErrUserKeyEmpty)
-	}
-
-	if uuid == "" {
-		// 重新生成uuid
-		newUuid, err := gmd5.Encrypt(grand.Letters(10))
-		if err != nil {
-			g.Log().Error(ctx, msgLog(MsgErrAuthUuid), err)
-			return Error(MsgErrAuthUuid)
-		}
-		uuid = newUuid
-	}
-
-	tokenStr := userKey + m.TokenDelimiter + uuid
-
-	token, err := gaes.Encrypt([]byte(tokenStr), m.EncryptKey)
-	if err != nil {
-		g.Log().Error(ctx, msgLog(MsgErrTokenEncrypt), tokenStr, err)
-		return Error(MsgErrTokenEncrypt)
-	}
-
-	return Succ(g.Map{
-		KeyUserKey: userKey,
-		KeyUuid:    uuid,
-		KeyToken:   gbase64.EncodeToString(token),
-	})
-}
-
-// DecryptToken token解密方法
-func (m *GfToken) DecryptToken(ctx context.Context, token string) Resp {
-	if token == "" {
-		return Fail(MsgErrTokenEmpty)
-	}
-
-	token64, err := gbase64.Decode([]byte(token))
-	if err != nil {
-		g.Log().Error(ctx, msgLog(MsgErrTokenDecode), token, err)
-		return Error(MsgErrTokenDecode)
-	}
-	decryptToken, err2 := gaes.Decrypt(token64, m.EncryptKey)
-	if err2 != nil {
-		g.Log().Error(ctx, msgLog(MsgErrTokenEncrypt), token, err2)
-		return Error(MsgErrTokenEncrypt)
-	}
-	tokenArray := gstr.Split(string(decryptToken), m.TokenDelimiter)
-	if len(tokenArray) < 2 {
-		g.Log().Error(ctx, msgLog(MsgErrTokenLen), token)
-		return Error(MsgErrTokenLen)
-	}
-
-	return Succ(g.Map{
-		KeyUserKey: tokenArray[0],
-		KeyUuid:    tokenArray[1],
-	})
 }
 
 // InitConfig 初始化配置信息
@@ -472,6 +354,15 @@ func (m *GfToken) InitConfig() bool {
 		}
 	}
 
+	m.GfTokenV2 = gtokenv2.NewGfTokenV2(gtokenv2.Options{
+		CacheMode:      m.CacheMode,
+		CachePreKey:    m.CacheKey,
+		Timeout:        int64(m.Timeout),
+		MaxRefresh:     int64(m.MaxRefresh),
+		TokenDelimiter: m.TokenDelimiter,
+		EncryptKey:     m.EncryptKey,
+	})
+
 	return true
 }
 
@@ -490,11 +381,6 @@ func (m *GfToken) Start() error {
 	if m.CacheMode > CacheModeFile {
 		g.Log().Error(ctx, msgLog(MsgErrNotSet, "CacheMode"))
 		return errors.New(fmt.Sprintf(MsgErrNotSet, "CacheMode"))
-	}
-
-	// 初始化文件缓存
-	if m.CacheMode == 3 {
-		m.initFileCache(ctx)
 	}
 
 	// 认证拦截器

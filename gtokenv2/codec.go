@@ -3,7 +3,6 @@ package gtokenv2
 import (
 	"context"
 	"errors"
-	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/v2/crypto/gaes"
 	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/encoding/gbase64"
@@ -80,7 +79,7 @@ func (m *DefaultCodec) Decrypt(ctx context.Context, token string) (userKey strin
 	}
 	decryptArray := gstr.Split(string(decryptStr), m.Delimiter)
 	if len(decryptArray) < 2 {
-		return "", errors.New(gtoken.MsgErrTokenLen)
+		return "", errors.New(MsgErrTokenLen)
 	}
 	return decryptArray[0], nil
 }

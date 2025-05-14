@@ -58,3 +58,28 @@ func TestDefaultCodec(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkEncryptDecryptToken(b *testing.B) {
+	b.Log("encrypt and decrypt token test ")
+
+	ctx := gctx.New()
+	codec := gtokenv2.NewDefaultCodec("_", []byte("koi29a83idakguqjq29asd9asd8a7jhq"))
+
+	userKey := "123123"
+	token, err := codec.Encode(ctx, userKey)
+	if err != nil {
+		b.Error(err)
+	}
+	b.Log(token)
+
+	for i := 0; i < b.N; i++ {
+		decryptUserKey, err := codec.Decrypt(ctx, token)
+		if err != nil {
+			b.Error(err)
+		}
+		//b.Log(userKey)
+		if userKey != decryptUserKey {
+			b.Error("error:", "token decrypt userKey error")
+		}
+	}
+}

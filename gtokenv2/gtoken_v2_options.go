@@ -1,8 +1,6 @@
 package gtokenv2
 
 type Options struct {
-	// GoFrame server name
-	ServerName string
 	// 缓存模式 1 gcache 2 gredis 默认1
 	CacheMode int8
 	// 缓存key前缀

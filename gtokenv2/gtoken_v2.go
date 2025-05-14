@@ -9,14 +9,14 @@ import (
 )
 
 // GfToken gtoken结构体
-type GfToken struct {
+type GfTokenV2 struct {
 	Options Options
 	Codec   Codec
 	Cache   Cache
 }
 
-func NewGfToken(options Options) *GfToken {
-	gfToken := &GfToken{
+func NewGfTokenV2(options Options) *GfTokenV2 {
+	gfToken := &GfTokenV2{
 		Options: options,
 		Codec:   NewDefaultCodec(options.TokenDelimiter, gconv.Bytes(options.EncryptKey)),
 		Cache:   NewDefaultCache(options.CacheMode, options.CachePreKey, options.Timeout),
@@ -25,7 +25,7 @@ func NewGfToken(options Options) *GfToken {
 }
 
 // Generate 生成 Token
-func (m *GfToken) Generate(ctx context.Context, userKey string, data any) (token string, err error) {
+func (m *GfTokenV2) Generate(ctx context.Context, userKey string, data any) (token string, err error) {
 	token, err = m.Codec.Encode(ctx, userKey)
 	if err != nil {
 		return "", err
@@ -46,7 +46,7 @@ func (m *GfToken) Generate(ctx context.Context, userKey string, data any) (token
 }
 
 // Validate 验证 Token
-func (m *GfToken) Validate(ctx context.Context, token string) (err error) {
+func (m *GfTokenV2) Validate(ctx context.Context, token string) (err error) {
 	if token == "" {
 		return errors.New(MsgErrTokenEmpty)
 	}
@@ -60,7 +60,7 @@ func (m *GfToken) Validate(ctx context.Context, token string) (err error) {
 	if err != nil {
 		return err
 	}
-	if userCache != nil {
+	if userCache == nil {
 		return errors.New(MsgErrValidate)
 	}
 	if token != userCache[KeyToken] {
@@ -71,12 +71,12 @@ func (m *GfToken) Validate(ctx context.Context, token string) (err error) {
 }
 
 // Get 通过userKey获取Token
-func (m *GfToken) Get(ctx context.Context, userKey string) (token string, data any, err error) {
+func (m *GfTokenV2) Get(ctx context.Context, userKey string) (token string, data any, err error) {
 	userCache, err := m.Cache.Get(ctx, userKey)
 	if err != nil {
 		return "", nil, err
 	}
-	if userCache != nil {
+	if userCache == nil {
 		return "", nil, errors.New(MsgErrValidate)
 	}
 
@@ -94,7 +94,31 @@ func (m *GfToken) Get(ctx context.Context, userKey string) (token string, data a
 	return gconv.String(userCache[KeyToken]), userCache[KeyData], nil
 }
 
-// Destroy 销毁Token
-func (m *GfToken) Destroy(ctx context.Context, userKey string) error {
+// GetUserKey 通过Token获取userKey
+func (m *GfTokenV2) GetUserKey(ctx context.Context, token string) (userKey string, err error) {
+	if token == "" {
+		return "", errors.New(MsgErrTokenEmpty)
+	}
+
+	userKey, err = m.Codec.Decrypt(ctx, token)
+	if err != nil {
+		return "", err
+	}
+
+	return userKey, nil
+}
+
+// Destroy 通过userKey销毁Token
+func (m *GfTokenV2) Destroy(ctx context.Context, userKey string) error {
 	return m.Cache.Remove(ctx, userKey)
+}
+
+// DestroyByToken 通过Token销毁
+func (m *GfTokenV2) DestroyByToken(ctx context.Context, token string) error {
+	userKey, err := m.Codec.Decrypt(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	return m.Destroy(ctx, userKey)
 }
