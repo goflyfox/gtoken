@@ -13,6 +13,7 @@ const (
 	UNAUTHORIZED = -401
 )
 
+// TODO ghttp.DefaultHandlerResponse{}
 type Resp struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
