@@ -158,10 +158,14 @@ func (m *GfToken) authMiddleware(r *ghttp.Request) {
 func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 	respData := m.getRequestToken(r)
 	if respData.Success() {
-		err := m.GfTokenV2.Validate(r.Context(), respData.DataString())
+		token := respData.DataString()
+		data, err := m.GfTokenV2.GetData(r.Context(), token)
 		if err != nil {
 			return Error(err.Error())
 		}
+		return Succ(g.Map{
+			KeyData: data,
+		})
 	}
 
 	return respData

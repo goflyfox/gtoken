@@ -108,6 +108,25 @@ func (m *GfTokenV2) GetUserKey(ctx context.Context, token string) (userKey strin
 	return userKey, nil
 }
 
+// GetData 获取Data数据
+func (m *GfTokenV2) GetData(ctx context.Context, token string) (data any, err error) {
+	err = m.Validate(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	userKey, err := m.GetUserKey(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	_, data, err = m.Get(ctx, userKey)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 // Destroy 通过userKey销毁Token
 func (m *GfTokenV2) Destroy(ctx context.Context, userKey string) error {
 	return m.Cache.Remove(ctx, userKey)

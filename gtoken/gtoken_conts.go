@@ -25,7 +25,6 @@ const (
 	KeyUserKey     = "userKey"
 	KeyRefreshTime = "refreshTime"
 	KeyCreateTime  = "createTime"
-	KeyUuid        = "uuid"
 	KeyData        = "data"
 	KeyToken       = "token"
 )
