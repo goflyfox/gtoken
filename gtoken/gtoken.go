@@ -61,7 +61,7 @@ type GfToken struct {
 	// 认证返回方法
 	AuthAfterFunc func(r *ghttp.Request, respData Resp)
 
-	GfTokenV2 *gtokenv2.GfTokenV2
+	GfTokenV2 gtokenv2.Token
 }
 
 // Login 登录
@@ -359,7 +359,7 @@ func (m *GfToken) InitConfig() bool {
 		}
 	}
 
-	m.GfTokenV2 = gtokenv2.NewGfTokenV2(gtokenv2.Options{
+	m.GfTokenV2 = gtokenv2.NewDefaultToken(gtokenv2.Options{
 		CacheMode:      m.CacheMode,
 		CachePreKey:    m.CacheKey,
 		Timeout:        int64(m.Timeout),

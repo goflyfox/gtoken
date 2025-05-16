@@ -8,14 +8,26 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// GfToken gtoken结构体
+// Token 接口
+type Token interface {
+	// Generate 生成 Token
+	Generate(ctx context.Context, userKey string, data any) (token string, err error)
+	// Validate 验证 Token
+	Validate(ctx context.Context, token string) (userKey string, err error)
+	// Get 获取 Token
+	Get(ctx context.Context, userKey string) (token string, data any, err error)
+	// Destroy 销毁 Token
+	Destroy(ctx context.Context, userKey string) error
+}
+
+// GfTokenV2 gtoken结构体
 type GfTokenV2 struct {
 	Options Options
 	Codec   Codec
 	Cache   Cache
 }
 
-func NewGfTokenV2(options Options) *GfTokenV2 {
+func NewDefaultToken(options Options) Token {
 	gfToken := &GfTokenV2{
 		Options: options,
 		Codec:   NewDefaultCodec(options.TokenDelimiter, gconv.Bytes(options.EncryptKey)),
