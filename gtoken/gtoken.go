@@ -105,8 +105,11 @@ func (m *GfToken) Logout(r *ghttp.Request) {
 	// 获取请求token
 	respData := m.getRequestToken(r)
 	if respData.Success() {
-		// 删除token
-		_ = m.GfTokenV2.DestroyByToken(r.Context(), respData.DataString())
+		userKey, err := m.GfTokenV2.Validate(r.Context(), respData.DataString())
+		if err == nil {
+			// 删除token
+			_ = m.GfTokenV2.Destroy(r.Context(), userKey)
+		}
 	}
 
 	m.LogoutAfterFunc(r, respData)
@@ -131,18 +134,12 @@ func (m *GfToken) authMiddleware(r *ghttp.Request) {
 	tokenResp := m.getRequestToken(r)
 	if tokenResp.Success() {
 		token := tokenResp.DataString()
-		err := m.GfTokenV2.Validate(r.Context(), token)
+		userKey, err := m.GfTokenV2.Validate(r.Context(), token)
 		if err != nil {
 			// 验证token
 			tokenResp = Unauthorized(err.Error(), "")
 		} else {
 			// 支持多端重复登录，返回相同token
-			userKey, err := m.GfTokenV2.GetUserKey(r.Context(), token)
-			if err != nil {
-				m.LoginAfterFunc(r, Error(err.Error()))
-				return
-			}
-
 			tokenResp = Succ(g.Map{
 				KeyUserKey: userKey,
 				KeyToken:   token,
@@ -159,7 +156,11 @@ func (m *GfToken) GetTokenData(r *ghttp.Request) Resp {
 	respData := m.getRequestToken(r)
 	if respData.Success() {
 		token := respData.DataString()
-		data, err := m.GfTokenV2.GetData(r.Context(), token)
+		userKey, err := m.GfTokenV2.Validate(r.Context(), token)
+		if err != nil {
+			return Error(err.Error())
+		}
+		_, data, err := m.GfTokenV2.Get(r.Context(), userKey)
 		if err != nil {
 			return Error(err.Error())
 		}
