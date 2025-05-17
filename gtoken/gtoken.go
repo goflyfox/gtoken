@@ -72,18 +72,6 @@ func (m *GfToken) Login(r *ghttp.Request) {
 		return
 	}
 
-	if m.MultiLogin {
-		// 支持多端重复登录，返回相同token
-		token, _, err := m.GfTokenV2.Get(r.Context(), userKey)
-		if err == nil && token != "" {
-			m.LoginAfterFunc(r, Succ(g.Map{
-				KeyUserKey: userKey,
-				KeyToken:   token,
-			}))
-			return
-		}
-	}
-
 	// 生成token
 	token, err := m.GfTokenV2.Generate(r.Context(), userKey, data)
 	if err != nil {
@@ -366,6 +354,7 @@ func (m *GfToken) InitConfig() bool {
 		MaxRefresh:     int64(m.MaxRefresh),
 		TokenDelimiter: m.TokenDelimiter,
 		EncryptKey:     m.EncryptKey,
+		MultiLogin:     m.MultiLogin,
 	})
 
 	return true

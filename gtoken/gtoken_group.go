@@ -2,7 +2,8 @@ package gtoken
 
 import (
 	"context"
-	"errors"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -11,7 +12,7 @@ import (
 // Middleware 绑定group
 func (m *GfToken) Middleware(ctx context.Context, group *ghttp.RouterGroup) error {
 	if !m.InitConfig() {
-		return errors.New("InitConfig fail")
+		return gerror.NewCode(gcode.CodeInternalError, "InitConfig fail")
 	}
 
 	// 设置为Group模式
@@ -20,18 +21,15 @@ func (m *GfToken) Middleware(ctx context.Context, group *ghttp.RouterGroup) erro
 
 	// 缓存模式
 	if m.CacheMode > CacheModeFile {
-		g.Log().Error(ctx, "[GToken]CacheMode set error")
-		return errors.New("CacheMode set error")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "CacheMode set error")
 	}
 	// 登录
 	if m.LoginPath == "" || m.LoginBeforeFunc == nil {
-		g.Log().Error(ctx, "[GToken]LoginPath or LoginBeforeFunc not set")
-		return errors.New("LoginPath or LoginBeforeFunc not set")
+		return gerror.NewCode(gcode.CodeMissingParameter, "LoginPath or LoginBeforeFunc not set")
 	}
 	// 登出
 	if m.LogoutPath == "" {
-		g.Log().Error(ctx, "[GToken]LogoutPath not set")
-		return errors.New("LogoutPath not set")
+		return gerror.NewCode(gcode.CodeMissingParameter, "LogoutPath not set")
 	}
 
 	group.Middleware(m.authMiddleware)

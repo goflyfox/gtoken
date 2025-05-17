@@ -18,6 +18,8 @@ type Token interface {
 	Get(ctx context.Context, userKey string) (token string, data any, err error)
 	// Destroy 销毁 Token
 	Destroy(ctx context.Context, userKey string) error
+	// GetOptions 获取配置参数
+	GetOptions() Options
 }
 
 // GfTokenV2 gtoken结构体
@@ -38,9 +40,17 @@ func NewDefaultToken(options Options) Token {
 
 // Generate 生成 Token
 func (m *GfTokenV2) Generate(ctx context.Context, userKey string, data any) (token string, err error) {
+	if m.Options.MultiLogin {
+		// 支持多端重复登录，如果获取到返回相同token
+		token, _, err = m.Get(ctx, userKey)
+		if err == nil && token != "" {
+			return
+		}
+	}
+
 	token, err = m.Codec.Encode(ctx, userKey)
 	if err != nil {
-		return "", err
+		return
 	}
 	userCache := g.Map{
 		KeyUserKey:    userKey,
@@ -51,10 +61,10 @@ func (m *GfTokenV2) Generate(ctx context.Context, userKey string, data any) (tok
 
 	err = m.Cache.Set(ctx, userKey, userCache)
 	if err != nil {
-		return "", err
+		return
 	}
 
-	return token, nil
+	return
 }
 
 // Validate 验证 Token
@@ -110,4 +120,8 @@ func (m *GfTokenV2) Get(ctx context.Context, userKey string) (token string, data
 // Destroy 通过userKey销毁Token
 func (m *GfTokenV2) Destroy(ctx context.Context, userKey string) error {
 	return m.Cache.Remove(ctx, userKey)
+}
+
+func (m *GfTokenV2) GetOptions() Options {
+	return m.Options
 }
