@@ -12,18 +12,21 @@ import (
 
 type Middleware struct {
 	Token Token
+	// 拦截排除地址
+	AuthExcludePaths g.SliceStr
 }
 
-func NewDefaultMiddleware(token Token) Middleware {
+func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 	return Middleware{
-		Token: token,
+		Token:            token,
+		AuthExcludePaths: excludePaths,
 	}
 }
 
 // Auth 认证拦截
 func (m Middleware) Auth(r *ghttp.Request) {
 	urlPath := r.URL.Path
-	if !authPath(r.Context(), urlPath, m.Token.GetOptions().AuthExcludePaths) {
+	if !authPath(r.Context(), urlPath, m.AuthExcludePaths) {
 		// 如果不需要认证，继续
 		r.Middleware.Next()
 		return
@@ -79,6 +82,9 @@ func GetRequestToken(r *ghttp.Request) (string, error) {
 // authPath 判断路径是否需要进行认证拦截
 // return true 需要认证
 func authPath(ctx context.Context, urlPath string, excludePaths g.SliceStr) bool {
+	if len(excludePaths) == 0 {
+		return true
+	}
 	// 去除后斜杠
 	if strings.HasSuffix(urlPath, "/") {
 		urlPath = gstr.SubStr(urlPath, 0, len(urlPath)-1)
