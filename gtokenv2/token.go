@@ -30,9 +30,25 @@ type GfTokenV2 struct {
 }
 
 func NewDefaultToken(options Options) Token {
+	if options.CacheMode == 0 {
+		options.CacheMode = CacheModeCache
+	}
+	if options.CachePreKey == "" {
+		options.CachePreKey = DefaultCacheKey
+	}
+	if options.Timeout == 0 {
+		options.Timeout = DefaultTimeout
+		options.MaxRefresh = DefaultTimeout / 2
+	}
+	if len(options.EncryptKey) == 0 {
+		options.EncryptKey = []byte(DefaultEncryptKey)
+	}
+	if options.TokenDelimiter == "" {
+		options.TokenDelimiter = DefaultTokenDelimiter
+	}
 	gfToken := &GfTokenV2{
 		Options: options,
-		Codec:   NewDefaultCodec(options.TokenDelimiter, gconv.Bytes(options.EncryptKey)),
+		Codec:   NewDefaultCodec(options.TokenDelimiter, options.EncryptKey),
 		Cache:   NewDefaultCache(options.CacheMode, options.CachePreKey, options.Timeout),
 	}
 	return gfToken
