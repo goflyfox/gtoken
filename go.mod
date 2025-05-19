@@ -1,4 +1,4 @@
-module github.com/goflyfox/gtoken
+module github.com/goflyfox/gtoken/v2
 
 require (
 	github.com/gogf/gf/v2 v2.9.0
