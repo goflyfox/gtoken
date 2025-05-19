@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/goflyfox/gtoken/example/sample/test/server"
-	"github.com/goflyfox/gtoken/gtoken"
+	"github.com/goflyfox/gtoken/example/sample/test/backend"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
 	"os"
 	"testing"
 )
 
 const (
-	TestURL string = "http://127.0.0.1:8081"
+	TestURL string = "http://127.0.0.1:8082"
 )
 
 var (
@@ -22,11 +23,11 @@ var (
 
 func setup() {
 	fmt.Println("start...")
-	server.Start()
+	backend.Start()
 }
 
 func teardown() {
-	server.Stop()
+	backend.Stop()
 	fmt.Println("stop.")
 }
 
@@ -38,8 +39,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestHello(t *testing.T) {
+	ctx := context.TODO()
+
 	t.Log("visit hello and no auth")
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/hello", "username="+Username); e != nil {
+	if r, e := g.Client().Post(ctx, TestURL+"/hello", "username="+Username); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -47,106 +50,122 @@ func TestHello(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData gtoken.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
 		}
-		if !respData.Success() {
-			t.Error("error:", respData.Json())
+		if respData.Code != gcode.CodeOK.Code() {
+			t.Error("error:", respData)
 		}
 	}
+}
+
+func TestUserData(t *testing.T) {
+	// 登录，访问用户信息
+	t.Log("1. execute login and visit user")
+	resp := Post(t, "/system/data", "username="+Username)
+	if resp.Code == gcode.CodeOK.Code() {
+		if resp.Data == "1" {
+			t.Log("get user data success", resp)
+		} else {
+			t.Error("user data not eq 1 ", resp)
+		}
+	} else {
+		t.Error("error:", resp)
+	}
+
+	// 登出
+	t.Log("2. execute logout")
+	resp = Post(t, "/user/logout", "username="+Username)
+	if resp.Code == gcode.CodeOK.Code() {
+		t.Log(resp)
+	} else {
+		t.Error("error:", resp)
+	}
+	delete(Token, Username)
 }
 
 func TestSystemUser(t *testing.T) {
-	t.Run("TestSystemUser", func(t *testing.T) {
-		// 未登录
-		t.Log("1. not login and visit user")
-		if r, e := g.Client().Post(context.TODO(), TestURL+"/system/user", "username="+Username); e != nil {
-			t.Error("error:", e)
-		} else {
-			defer r.Close()
+	ctx := context.TODO()
+	// 未登录
+	t.Log("1. not login and visit user")
+	if r, e := g.Client().Post(ctx, TestURL+"/system/user", "username="+Username); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
 
-			content := string(r.ReadAll())
-			t.Log(content)
+		content := string(r.ReadAll())
+		t.Log(content)
 
-			var respData gtoken.Resp
-			err := json.Unmarshal([]byte(content), &respData)
-			if err != nil {
-				t.Error("error:", err)
-			}
-			if respData.Success() {
-				t.Error("error:", respData.Json())
-			}
+		var respData backend.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
 		}
-
-		// 登录，访问用户信息
-		t.Log("2. execute login and visit user")
-		data := Post(t, "/system/user")
-		if data.Success() {
-			t.Log(data.Json())
-		} else {
-			t.Error("error:", data.Json())
+		if respData.Code == gcode.CodeOK.Code() {
+			t.Error("error:", respData)
 		}
+	}
 
-		// 登录，获取用户信息
-		t.Log("2. execute get user data")
-		data = Post(t, "/user/data")
-		if data.Success() {
-			t.Log(data.Json())
-		} else {
-			t.Error("error:", data.Json())
-		}
+	// 登录，访问用户信息
+	t.Log("2. execute login and visit user")
+	data := Post(t, "/system/user", "username="+Username)
+	if data.Code == gcode.CodeOK.Code() {
+		t.Log(data)
+	} else {
+		t.Error("error:", data)
+	}
 
-		// 登出
-		t.Log("3. execute logout")
-		data = Post(t, "/user/logout")
-		if data.Success() {
-			t.Log(data.Json())
-		} else {
-			t.Error("error:", data.Json())
-		}
+	// 登出
+	t.Log("3. execute logout")
+	data = Post(t, "/user/logout", "username="+Username)
+	if data.Code == gcode.CodeOK.Code() {
+		t.Log(data)
+	} else {
+		t.Error("error:", data)
+	}
 
-		// 登出访问用户信息
-		t.Log("4. visit user")
-		data = Post(t, "/system/user", "username="+Username)
-		if data.Success() {
-			t.Error("error:", data.Json())
-		} else {
-			t.Log(data.Json())
-		}
-		delete(Token, Username)
-	})
+	// 登出访问用户信息
+	t.Log("4. visit user")
+	data = Post(t, "/system/user", "username="+Username)
+	if data.Code == gcode.CodeOK.Code() {
+		t.Error("error:", data)
+	} else {
+		t.Log(data)
+	}
+	delete(Token, Username)
 }
 
 func TestUserLoginFail(t *testing.T) {
-	t.Run("TestUserLoginFail", func(t *testing.T) {
-		// 登录失败
-		t.Log("1. login fail ")
-		if r, e := g.Client().Post(context.TODO(), TestURL+"/login", "username=&passwd="); e != nil {
-			t.Error("error:", e)
-		} else {
-			defer r.Close()
+	ctx := context.TODO()
+	// 登录失败
+	t.Log("1. login fail ")
+	if r, e := g.Client().Post(ctx, TestURL+"/login", "username=&passwd="); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
 
-			content := string(r.ReadAll())
+		content := string(r.ReadAll())
 
-			var respData gtoken.Resp
-			err := json.Unmarshal([]byte(content), &respData)
-			if err != nil {
-				t.Error("error:", err)
-			}
-
-			if respData.Success() {
-				t.Error("error:", "login fail:"+respData.Json())
-			}
+		var respData backend.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
 		}
-	})
+
+		if respData.Code == gcode.CodeOK.Code() {
+			t.Error("error:", "login fail:", respData)
+		}
+	}
+
 }
 
 func TestExclude(t *testing.T) {
+	ctx := context.TODO()
 	// 未登录可以访问
 	t.Log("1. exclude user info")
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/system/user/info", "username="+Username); e != nil {
+	if r, e := g.Client().Post(ctx, TestURL+"/system/user/info", "username="+Username); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -154,17 +173,17 @@ func TestExclude(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData gtoken.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
 		}
-		if !respData.Success() {
-			t.Error("error:", respData.Json())
+		if respData.Code != gcode.CodeOK.Code() {
+			t.Error("error:", respData)
 		}
 	}
 
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/user/info", "username="+Username); e != nil {
+	if r, e := g.Client().Post(ctx, TestURL+"/user/info", "username="+Username); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
@@ -172,41 +191,17 @@ func TestExclude(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData gtoken.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
 		}
-		if !respData.Success() {
-			t.Error("error:", respData.Json())
+		if respData.Code != gcode.CodeOK.Code() {
+			t.Error("error:", respData)
 		}
 	}
 
 }
-
-//func TestRefresh(t *testing.T) {
-//	// 登录，访问用户信息
-//	t.Log("1. execute login and visit user")
-//	data := Post(t, "/system/user", "username="+Username)
-//	if data.Success() {
-//		t.Log(data.Json())
-//	} else {
-//		t.Error("error:", data.Json())
-//	}
-//
-//	for i := 1; i < 9; i++ {
-//		time.Sleep(2 * time.Second)
-//		// 登录，访问用户信息
-//		t.Log("1. execute login and visit user")
-//		data = Post(t, "/system/user", "username="+Username)
-//		if data.Success() {
-//			t.Log(data.Json())
-//		} else {
-//			t.Error("error:", data.Json())
-//		}
-//	}
-//
-//}
 
 func TestLogin(t *testing.T) {
 	t.Log(" login first ")
@@ -224,82 +219,21 @@ func TestLogin(t *testing.T) {
 func TestLogout(t *testing.T) {
 	t.Log(" logout test ")
 	data := Post(t, "/user/logout", "username="+Username)
-	if data.Success() {
-		t.Log(data.Json())
+	if data.Code == gcode.CodeOK.Code() {
+		t.Log(data)
 	} else {
-		t.Error("error:", data.Json())
+		t.Error("error:", data)
 	}
 	delete(Token, Username)
 }
 
-func TestMultiLogin(t *testing.T) {
-	t.Log(" TestMultiLogin start... ")
-	var token1, token2 string
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
+func Post(t *testing.T, urlPath string, data ...interface{}) backend.Resp {
+	ctx := context.TODO()
 
-		content := string(r.ReadAll())
-		t.Log("token1 content:" + content)
-
-		var respData gtoken.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-
-		if !respData.Success() {
-			t.Error("error:", "resp fail:"+respData.Json())
-		}
-
-		token1 = respData.GetString("token")
-	}
-	t.Log("token1:" + token1)
-
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
-
-		content := string(r.ReadAll())
-		t.Log("token2 content:" + content)
-
-		var respData gtoken.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-
-		if !respData.Success() {
-			t.Error("error:", "resp fail:"+respData.Json())
-		}
-
-		token2 = respData.GetString("token")
-	}
-
-	t.Log("token2:" + token2)
-
-	gVar, err := g.Cfg().Get(context.TODO(), "gToken.MultiLogin")
-	if err != nil {
-		t.Error("error:", err)
-	}
-	if gVar.Bool() {
-		if token1 != token2 {
-			t.Error("error:", "token not same ")
-		}
-	} else {
-		if token1 == token2 {
-			t.Error("error:", "token same ")
-		}
-	}
-}
-
-func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
 	client := g.Client()
 	client.SetHeader("Authorization", "Bearer "+getToken(t))
-	content := client.RequestContent(context.TODO(), "POST", TestURL+urlPath, data...)
-	var respData gtoken.Resp
+	content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
+	var respData backend.Resp
 	err := json.Unmarshal([]byte(content), &respData)
 	if err != nil {
 		t.Error("error:", err)
@@ -308,28 +242,95 @@ func Post(t *testing.T, urlPath string, data ...interface{}) gtoken.Resp {
 }
 
 func getToken(t *testing.T) string {
+	ctx := context.TODO()
+
 	if Token[Username] != "" {
 		return Token[Username]
 	}
 
-	if r, e := g.Client().Post(context.TODO(), TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+	if r, e := g.Client().Post(ctx, TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
 		t.Error("error:", e)
 	} else {
 		defer r.Close()
 
 		content := string(r.ReadAll())
 
-		var respData gtoken.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
 		}
 
-		if !respData.Success() {
-			t.Error("error:", "resp fail:"+respData.Json())
+		if respData.Code != gcode.CodeOK.Code() {
+			t.Error("error:", "resp fail:", respData)
 		}
 
-		Token[Username] = respData.GetString("token")
+		Token[Username] = gconv.String(gconv.Map(respData.Data)["token"])
 	}
 	return Token[Username]
+}
+
+func TestMultiLogin(t *testing.T) {
+	ctx := context.TODO()
+
+	t.Log(" TestMultiLogin start... ")
+	var token1, token2 string
+	if r, e := g.Client().Post(ctx, TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+		t.Log("token1 content:" + content)
+
+		var respData backend.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if respData.Code != gcode.CodeOK.Code() {
+			t.Error("error:", "resp fail:", respData)
+		}
+
+		token1 = gconv.String(gconv.Map(respData.Data)["token"])
+	}
+	t.Log("token1:" + token1)
+
+	if r, e := g.Client().Post(ctx, TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+		t.Log("token2 content:" + content)
+
+		var respData backend.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if respData.Code != gcode.CodeOK.Code() {
+			t.Error("error:", "resp fail:", respData)
+		}
+
+		token2 = gconv.String(gconv.Map(respData.Data)["token"])
+	}
+
+	t.Log("token2:" + token2)
+
+	MultiLogin, err := g.Cfg().Get(ctx, "gToken.MultiLogin")
+	if err != nil {
+		panic(err)
+	}
+	if MultiLogin.Bool() {
+		if token1 != token2 {
+			t.Error("error:", "token not same ")
+		}
+	} else {
+		if token1 == token2 {
+			t.Error("error:", "token same ")
+		}
+	}
 }

@@ -2,7 +2,7 @@ package backend
 
 import (
 	"context"
-	"github.com/goflyfox/gtoken/gtokenv2"
+	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -35,7 +35,7 @@ func Stop() {
 	server.Shutdown()
 }
 
-var gfToken gtokenv2.Token
+var gfToken gtoken.Token
 
 /*
 统一路由注册
@@ -43,7 +43,7 @@ var gfToken gtokenv2.Token
 func InitRouter(s *ghttp.Server) {
 	ctx := gctx.New()
 	// 启动gtoken
-	gfToken = gtokenv2.NewDefaultToken(gtokenv2.Options{
+	gfToken = gtoken.NewDefaultToken(gtoken.Options{
 		CacheMode:      CfgGet(ctx, "gToken.CacheMode").Int8(),
 		CachePreKey:    CfgGet(ctx, "gToken.CacheKey").String(),
 		Timeout:        CfgGet(ctx, "gToken.Timeout").Int64(),
@@ -62,10 +62,10 @@ func InitRouter(s *ghttp.Server) {
 
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
-		group.Middleware(gtokenv2.NewDefaultMiddleware(gfToken, "/user/info", "/system/user/info").Auth)
+		group.Middleware(gtoken.NewDefaultMiddleware(gfToken, "/user/info", "/system/user/info").Auth)
 		// 获取登录扩展属性
 		group.ALL("/system/data", func(r *ghttp.Request) {
-			_, data, err := gfToken.Get(r.Context(), r.GetCtxVar(gtokenv2.KeyUserKey).String())
+			_, data, err := gfToken.Get(r.Context(), r.GetCtxVar(gtoken.KeyUserKey).String())
 			if err != nil {
 				r.Response.WriteJson(RespError(err))
 			}
@@ -81,7 +81,7 @@ func InitRouter(s *ghttp.Server) {
 			r.Response.WriteJson(RespSuccess("system user info"))
 		})
 		group.ALL("/user/logout", func(r *ghttp.Request) {
-			_ = gfToken.Destroy(ctx, r.GetCtxVar(gtokenv2.KeyUserKey).String())
+			_ = gfToken.Destroy(ctx, r.GetCtxVar(gtoken.KeyUserKey).String())
 			r.Response.WriteJson(RespSuccess("user logout"))
 		})
 	})
@@ -100,8 +100,8 @@ func InitRouter(s *ghttp.Server) {
 			r.ExitAll()
 		}
 		r.Response.WriteJson(RespSuccess(g.Map{
-			gtokenv2.KeyUserKey: username,
-			gtokenv2.KeyToken:   token,
+			gtoken.KeyUserKey: username,
+			gtoken.KeyToken:   token,
 		}))
 
 	})

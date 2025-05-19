@@ -1,13 +1,19 @@
 server:
-  Address: 127.0.0.1:8081
+  Address: 127.0.0.1:8082
   ServerAgent: gtoken-demo
-  LogPath: ./example/logs
+  LogPath: ./example/sample1/logs
 
 gToken:
   # 缓存模式 1 gcache 2 gredis
   CacheMode: 1
   # 是否支持多端登录
   MultiLogin: true
+  CacheKey: "GToken:"
+  Timeout: 0
+  MaxRefresh: 0
+  TokenDelimiter: "_"
+  EncryptKey: "koi29a83idakguqjq29asd9asd8a7jhq"
+  AuthFailMsg: "登录超时，请重新登录"
 
 # Redis 配置
 redis:

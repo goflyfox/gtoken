@@ -1,4 +1,4 @@
-package gtokenv2
+package gtoken
 
 type Options struct {
 	// 缓存模式 1 gcache 2 gredis 默认1

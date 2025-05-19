@@ -1,7 +1,7 @@
-package gtokenv2_test
+package gtoken_test
 
 import (
-	"github.com/goflyfox/gtoken/gtokenv2"
+	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/v2/os/gctx"
 	"testing"
 
@@ -10,7 +10,7 @@ import (
 
 func TestDefaultCodec(t *testing.T) {
 	// 默认编解码器
-	codec := gtokenv2.NewDefaultCodec("_", []byte("koi29a83idakguqjq29asd9asd8a7jhq"))
+	codec := gtoken.NewDefaultCodec("_", []byte("koi29a83idakguqjq29asd9asd8a7jhq"))
 	ctx := gctx.New()
 	type TestStruct struct {
 		UserKey string
@@ -63,7 +63,7 @@ func BenchmarkEncryptDecryptToken(b *testing.B) {
 	b.Log("encrypt and decrypt token test ")
 
 	ctx := gctx.New()
-	codec := gtokenv2.NewDefaultCodec("_", []byte("koi29a83idakguqjq29asd9asd8a7jhq"))
+	codec := gtoken.NewDefaultCodec("_", []byte("koi29a83idakguqjq29asd9asd8a7jhq"))
 
 	userKey := "123123"
 	token, err := codec.Encode(ctx, userKey)

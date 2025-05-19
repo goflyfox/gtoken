@@ -1,7 +1,7 @@
-package gtokenv2_test
+package gtoken_test
 
 import (
-	"github.com/goflyfox/gtoken/gtokenv2"
+	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"testing"
@@ -13,7 +13,7 @@ import (
 
 func TestDefaultCache(t *testing.T) {
 	// 默认编解码器
-	cache := gtokenv2.NewDefaultCache(gtokenv2.CacheModeFile, gtokenv2.DefaultCacheKey, gtokenv2.DefaultTimeout)
+	cache := gtoken.NewDefaultCache(gtoken.CacheModeFile, gtoken.DefaultCacheKey, gtoken.DefaultTimeout)
 	ctx := gctx.New()
 	type TestStruct struct {
 		UserKey string

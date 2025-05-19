@@ -1,7 +1,7 @@
-package gtokenv2_test
+package gtoken_test
 
 import (
-	"github.com/goflyfox/gtoken/gtokenv2"
+	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +13,7 @@ func TestGenerate(t *testing.T) {
 	userKey := "testUser"
 	// 非多端登陆，每次生成新Token
 	{
-		gfToken := gtokenv2.NewDefaultToken(gtokenv2.Options{})
+		gfToken := gtoken.NewDefaultToken(gtoken.Options{})
 		token1, err := gfToken.Generate(ctx, userKey, nil)
 		assert.NoError(t, err)
 		token2, err := gfToken.Generate(ctx, userKey, nil)
@@ -22,7 +22,7 @@ func TestGenerate(t *testing.T) {
 	}
 	// 支持多端登陆
 	{
-		gfToken := gtokenv2.NewDefaultToken(gtokenv2.Options{
+		gfToken := gtoken.NewDefaultToken(gtoken.Options{
 			MultiLogin: true,
 		})
 		token1, err := gfToken.Generate(ctx, userKey, nil)
@@ -38,7 +38,7 @@ func TestValidate(t *testing.T) {
 	userKey := "testUser"
 	// 登陆成功
 	{
-		gfToken := gtokenv2.NewDefaultToken(gtokenv2.Options{})
+		gfToken := gtoken.NewDefaultToken(gtoken.Options{})
 		token, err := gfToken.Generate(ctx, userKey, nil)
 		assert.NoError(t, err)
 		u, err := gfToken.Validate(ctx, token)
@@ -47,7 +47,7 @@ func TestValidate(t *testing.T) {
 	}
 	// Token空
 	{
-		gfToken := gtokenv2.NewDefaultToken(gtokenv2.Options{})
+		gfToken := gtoken.NewDefaultToken(gtoken.Options{})
 		u, err := gfToken.Validate(ctx, "")
 		glog.Info(ctx, u, err)
 		assert.Error(t, err)
@@ -55,7 +55,7 @@ func TestValidate(t *testing.T) {
 	}
 	// Token错误
 	{
-		gfToken := gtokenv2.NewDefaultToken(gtokenv2.Options{})
+		gfToken := gtoken.NewDefaultToken(gtoken.Options{})
 		u, err := gfToken.Validate(ctx, "123")
 		glog.Info(ctx, u, err)
 		assert.Error(t, err)
@@ -68,7 +68,7 @@ func TestDestroy(t *testing.T) {
 	userKey := "testUser"
 	// 销毁成功
 	{
-		gfToken := gtokenv2.NewDefaultToken(gtokenv2.Options{})
+		gfToken := gtoken.NewDefaultToken(gtoken.Options{})
 		token, err := gfToken.Generate(ctx, userKey, "1")
 		assert.NoError(t, err)
 		u, err := gfToken.Validate(ctx, token)
@@ -88,7 +88,7 @@ func TestGet(t *testing.T) {
 	ctx := gctx.New()
 	userKey := "testUser"
 	{
-		gfToken := gtokenv2.NewDefaultToken(gtokenv2.Options{})
+		gfToken := gtoken.NewDefaultToken(gtoken.Options{})
 		data := "1"
 		token, err := gfToken.Generate(ctx, userKey, data)
 		assert.NoError(t, err)
