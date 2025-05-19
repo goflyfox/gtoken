@@ -3,7 +3,6 @@ package test
 import (
 	"context"
 	"github.com/goflyfox/gtoken/gtoken"
-	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -81,29 +80,5 @@ func TestRedisCache(t *testing.T) {
 	}
 	if gconv.String(data) != "" {
 		t.Error("cache del error, data:" + gconv.String(data))
-	}
-}
-
-func TestJson(t *testing.T) {
-	t.Log("json test ")
-	cacheValue := g.Map{
-		"userKey": "123",
-		"uuid":    "abc",
-		"data":    "",
-	}
-
-	cacheValueJson, err1 := gjson.Encode(cacheValue)
-	if err1 != nil {
-		t.Error("cache json encode error:" + err1.Error())
-	}
-
-	var userCache g.Map
-	err2 := gjson.DecodeTo(cacheValueJson, &userCache)
-	if err2 != nil {
-		t.Error("cache get json error:" + err2.Error())
-	}
-
-	if gconv.Map(userCache)["userKey"] != "123" {
-		t.Error("cache get json  data error:" + gconv.String(userCache))
 	}
 }

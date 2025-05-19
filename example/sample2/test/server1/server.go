@@ -2,10 +2,8 @@ package server1
 
 import (
 	"context"
-	"github.com/goflyfox/gtoken/gtoken"
 	"github.com/goflyfox/gtoken/gtokenv2"
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcfg"
@@ -19,7 +17,7 @@ var TestServerName string
 var server *ghttp.Server
 
 func Start() {
-	ctx := context.TODO()
+	ctx := gctx.New()
 
 	g.Log().Info(ctx, "########service start...")
 
@@ -27,7 +25,7 @@ func Start() {
 		fileConfig.SetPath("../config")
 	}
 	server = g.Server(TestServerName)
-	initRouter(server)
+	InitRouter(server)
 
 	g.Log().Info(ctx, "########service finish.")
 	server.Start()
@@ -39,31 +37,20 @@ func Stop() {
 
 var gfToken gtokenv2.Token
 
-type Resp = ghttp.DefaultHandlerResponse
-
-func RespError(err error) Resp {
-	return Resp{Code: gerror.Code(err).Code(), Message: gerror.Code(err).Message(), Data: gerror.Code(err).Detail()}
-}
-
-func RespSuccess(data any) Resp {
-	return Resp{Code: 0, Message: "success", Data: data}
-}
-
 /*
 统一路由注册
 */
-func initRouter(s *ghttp.Server) {
+func InitRouter(s *ghttp.Server) {
 	ctx := gctx.New()
 	// 启动gtoken
 	gfToken = gtokenv2.NewDefaultToken(gtokenv2.Options{
-		CacheMode:        CfgGet(ctx, "gToken.CacheMode").Int8(),
-		CachePreKey:      CfgGet(ctx, "gToken.CacheKey").String(),
-		Timeout:          CfgGet(ctx, "gToken.Timeout").Int64(),
-		MaxRefresh:       CfgGet(ctx, "gToken.MaxRefresh").Int64(),
-		TokenDelimiter:   CfgGet(ctx, "gToken.TokenDelimiter").String(),
-		EncryptKey:       CfgGet(ctx, "gToken.EncryptKey").Bytes(),
-		MultiLogin:       CfgGet(ctx, "gToken.MultiLogin").Bool(),
-		AuthExcludePaths: g.SliceStr{"/user/info", "/system/user/info"}, // 不拦截路径 /user/info,/system/user/info,/system/user,
+		CacheMode:      CfgGet(ctx, "gToken.CacheMode").Int8(),
+		CachePreKey:    CfgGet(ctx, "gToken.CacheKey").String(),
+		Timeout:        CfgGet(ctx, "gToken.Timeout").Int64(),
+		MaxRefresh:     CfgGet(ctx, "gToken.MaxRefresh").Int64(),
+		TokenDelimiter: CfgGet(ctx, "gToken.TokenDelimiter").String(),
+		EncryptKey:     CfgGet(ctx, "gToken.EncryptKey").Bytes(),
+		MultiLogin:     CfgGet(ctx, "gToken.MultiLogin").Bool(),
 	})
 
 	// 调试路由
@@ -75,7 +62,7 @@ func initRouter(s *ghttp.Server) {
 
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
-		group.Middleware(gtokenv2.NewDefaultMiddleware(gfToken).Auth)
+		group.Middleware(gtokenv2.NewDefaultMiddleware(gfToken, "/user/info", "/system/user/info").Auth)
 		// 获取登录扩展属性
 		group.ALL("/system/data", func(r *ghttp.Request) {
 			_, data, err := gfToken.Get(r.Context(), r.GetCtxVar(gtokenv2.KeyUserKey).String())
@@ -104,7 +91,7 @@ func initRouter(s *ghttp.Server) {
 		passwd := r.Get("passwd").String()
 
 		if username == "" || passwd == "" {
-			r.Response.WriteJson(gtoken.Fail("账号或密码错误."))
+			r.Response.WriteJson(RespFail("账号或密码错误."))
 			r.ExitAll()
 		}
 		token, err := gfToken.Generate(ctx, username, "1")
@@ -122,7 +109,7 @@ func initRouter(s *ghttp.Server) {
 }
 
 func CfgGet(ctx context.Context, name string) *gvar.Var {
-	gVar, _ := g.Config().Get(ctx, name)
+	gVar := g.Config().MustGet(ctx, name)
 	return gVar
 }
 
