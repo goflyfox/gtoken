@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/goflyfox/gtoken/example/sample/test/backend"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
+	"gtoken-demo/backend"
 )
 
 func main() {

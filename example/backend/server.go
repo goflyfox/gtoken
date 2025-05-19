@@ -2,7 +2,7 @@ package backend
 
 import (
 	"context"
-	"github.com/goflyfox/gtoken/gtoken"
+	"github.com/goflyfox/gtoken/v2/gtoken"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"

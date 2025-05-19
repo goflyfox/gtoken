@@ -1,13 +1,13 @@
-package test
+package main_test
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/goflyfox/gtoken/example/sample/test/backend"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
+	"gtoken-demo/backend"
 	"os"
 	"testing"
 )
