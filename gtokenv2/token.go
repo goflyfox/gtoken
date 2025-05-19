@@ -2,7 +2,8 @@ package gtokenv2
 
 import (
 	"context"
-	"errors"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -86,7 +87,7 @@ func (m *GfTokenV2) Generate(ctx context.Context, userKey string, data any) (tok
 // Validate 验证 Token
 func (m *GfTokenV2) Validate(ctx context.Context, token string) (userKey string, err error) {
 	if token == "" {
-		err = errors.New(MsgErrValidate)
+		err = gerror.NewCode(gcode.CodeInvalidParameter, MsgErrValidate)
 		return
 	}
 
@@ -99,11 +100,11 @@ func (m *GfTokenV2) Validate(ctx context.Context, token string) (userKey string,
 		return
 	}
 	if userCache == nil {
-		err = errors.New(MsgErrValidate)
+		err = gerror.NewCode(gcode.CodeValidationFailed, MsgErrValidate)
 		return
 	}
 	if token != userCache[KeyToken] {
-		err = errors.New(MsgErrValidate)
+		err = gerror.NewCode(gcode.CodeValidationFailed, MsgErrValidate)
 		return
 	}
 
@@ -128,7 +129,7 @@ func (m *GfTokenV2) Get(ctx context.Context, userKey string) (token string, data
 		return "", nil, err
 	}
 	if userCache == nil {
-		return "", nil, errors.New(MsgErrValidate)
+		return "", nil, gerror.NewCode(gcode.CodeValidationFailed, MsgErrValidate)
 	}
 	return gconv.String(userCache[KeyToken]), userCache[KeyData], nil
 }

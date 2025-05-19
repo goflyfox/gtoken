@@ -2,10 +2,11 @@ package gtokenv2
 
 import (
 	"context"
-	"errors"
 	"github.com/gogf/gf/v2/crypto/gaes"
 	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/grand"
 )
@@ -44,7 +45,7 @@ func NewDefaultCodec(delimiter string, encryptKey []byte) *DefaultCodec {
 // Encode token加密方法
 func (c *DefaultCodec) Encode(ctx context.Context, userKey string) (token string, err error) {
 	if userKey == "" {
-		return "", errors.New(MsgErrUserKeyEmpty)
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, MsgErrUserKeyEmpty)
 	}
 
 	// 随机
@@ -66,7 +67,7 @@ func (c *DefaultCodec) Encode(ctx context.Context, userKey string) (token string
 // Decrypt token解密方法
 func (m *DefaultCodec) Decrypt(ctx context.Context, token string) (userKey string, err error) {
 	if token == "" {
-		return "", errors.New(MsgErrTokenEmpty)
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, MsgErrTokenEmpty)
 	}
 
 	token64, err := gbase64.Decode([]byte(token))
@@ -79,7 +80,7 @@ func (m *DefaultCodec) Decrypt(ctx context.Context, token string) (userKey strin
 	}
 	decryptArray := gstr.Split(string(decryptStr), m.Delimiter)
 	if len(decryptArray) < 2 {
-		return "", errors.New(MsgErrTokenLen)
+		return "", gerror.NewCode(gcode.CodeValidationFailed, MsgErrTokenLen)
 	}
 	return decryptArray[0], nil
 }

@@ -22,5 +22,5 @@ const (
 	MsgErrTokenEmpty   = "token is empty"
 	MsgErrTokenLen     = "token len error"
 	MsgErrValidate     = "user validate error"
-	MsgErrDataEmpty    = "cache data empty"
+	MsgErrDataEmpty    = "cache value is nil"
 )
