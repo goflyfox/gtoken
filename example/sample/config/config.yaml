@@ -8,7 +8,7 @@ gToken:
   CacheMode: 1
   # 是否支持多端登录
   MultiLogin: true
-  CacheKey: "GToken:"
+  CachePreKey: "GToken:"
   Timeout: 0
   MaxRefresh: 0
   TokenDelimiter: "_"
