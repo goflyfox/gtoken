@@ -10,9 +10,6 @@ const (
 	DefaultCacheKey       = "GToken:"
 	DefaultTokenDelimiter = "_"
 	DefaultEncryptKey     = "12345678912345678912345678912345"
-	DefaultAuthFailMsg    = "请求错误或登录超时"
-
-	TraceId = "d5dfce77cdff812161134e55de3c5207"
 
 	KeyUserKey    = "userKey"
 	KeyCreateTime = "createTime"
