@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/goflyfox/gtoken/example/sample2/test/server1"
+	"github.com/goflyfox/gtoken/example/sample2/test/backend"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -16,7 +16,7 @@ func main() {
 		fileConfig.SetPath("../config")
 	}
 	server := g.Server()
-	server1.InitRouter(server)
+	backend.InitRouter(server)
 
 	g.Log().Info(ctx, "########service finish.")
 	server.Run()

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/goflyfox/gtoken/example/sample2/test/server1"
+	"github.com/goflyfox/gtoken/example/sample2/test/backend"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -23,11 +23,11 @@ var (
 
 func setup() {
 	fmt.Println("start...")
-	server1.Start()
+	backend.Start()
 }
 
 func teardown() {
-	server1.Stop()
+	backend.Stop()
 	fmt.Println("stop.")
 }
 
@@ -50,7 +50,7 @@ func TestHello(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
@@ -98,7 +98,7 @@ func TestSystemUser(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
@@ -148,7 +148,7 @@ func TestUserLoginFail(t *testing.T) {
 
 		content := string(r.ReadAll())
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
@@ -173,7 +173,7 @@ func TestExclude(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
@@ -191,7 +191,7 @@ func TestExclude(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log(content)
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
@@ -227,13 +227,13 @@ func TestLogout(t *testing.T) {
 	delete(Token, Username)
 }
 
-func Post(t *testing.T, urlPath string, data ...interface{}) server1.Resp {
+func Post(t *testing.T, urlPath string, data ...interface{}) backend.Resp {
 	ctx := context.TODO()
 
 	client := g.Client()
 	client.SetHeader("Authorization", "Bearer "+getToken(t))
 	content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
-	var respData server1.Resp
+	var respData backend.Resp
 	err := json.Unmarshal([]byte(content), &respData)
 	if err != nil {
 		t.Error("error:", err)
@@ -255,7 +255,7 @@ func getToken(t *testing.T) string {
 
 		content := string(r.ReadAll())
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
@@ -283,7 +283,7 @@ func TestMultiLogin(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log("token1 content:" + content)
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
@@ -305,7 +305,7 @@ func TestMultiLogin(t *testing.T) {
 		content := string(r.ReadAll())
 		t.Log("token2 content:" + content)
 
-		var respData server1.Resp
+		var respData backend.Resp
 		err := json.Unmarshal([]byte(content), &respData)
 		if err != nil {
 			t.Error("error:", err)
