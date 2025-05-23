@@ -9,7 +9,7 @@
 * Gitee地址：https://gitee.com/goflyfox/gtoken
 
 ## gtoken优势
-1. gtoken支撑单点应用测试使用内存存储，支持个人项目文件存储，也支持企业集群使用redis存储；完全适用于企业生产级使用；
+1. gtoken支撑单点应用测试使用内存存储，支持个人小项目文件存储，也支持企业集群使用redis存储；完全适用于企业生产级使用；
 2. 有效的避免了jwt服务端无法退出问题；
 3. 解决jwt无法作废已颁布的令牌，只能等到令牌过期问题；
 4. 通过用户扩展信息存储在服务端，有效规避了jwt携带大量用户扩展信息导致降低传输效率问题；
@@ -38,13 +38,12 @@ MaxRefresh int
 
 获取最新版本: `go get -u -v github.com/goflyfox/gtoken/v2`
 
-## 分组中间件实现
+## 使用说明
 
-GoFrame官方推荐使用Group方式实现路由和中间件；
-
-### 使用说明
-
-推荐使用分组方式实现
+1. 初始化配置gtoken.Options{}, 并创建gtoken对象(`gtoken.NewDefaultToken`)；参数详情见《配置项说明》部分
+2. 注册认证中间件`gtoken.NewDefaultMiddleware(gfToken).Auth`
+3. 登陆认证成功后，生成Token（`gfToken.Generate`）并返回给客户端
+4. 登出时销毁Token(`gfToken.Destroy`)
 
 ```go
 	// 创建gtoken对象
@@ -99,15 +98,14 @@ GoFrame官方推荐使用Group方式实现路由和中间件；
 | 是否支持多端登录 | MultiLogin     | 默认false                              |
 | 拦截排除地址     | excludePaths   | 此路径列表不进行认证                   |
 
-## 文档（待完善）
+## 示例
 
-最新文档：请先参考gtoken/example/sample/test/backend/server.go文件，后续完善
-
-历史文档v1：https://goframe.org/pages/viewpage.action?pageId=1115974
+使用示例，请先参考`gtoken/example/sample/test/backend/server.go`文件
 
 ## 感谢
 
 1. gf框架 [https://github.com/gogf/gf](https://github.com/gogf/gf) 
+2. 历史文档v1：https://goframe.org/pages/viewpage.action?pageId=1115974
 
 ## 项目支持
 
