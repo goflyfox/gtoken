@@ -41,13 +41,9 @@ func InitRouter(s *ghttp.Server) {
 	ctx := gctx.New()
 	// 创建gtoken对象
 	gToken = gtoken.NewDefaultToken(gtoken.Options{
-		CacheMode:      CfgGet(ctx, "gToken.CacheMode").Int8(),
-		CachePreKey:    CfgGet(ctx, "gToken.CachePreKey").String(),
-		Timeout:        CfgGet(ctx, "gToken.Timeout").Int64(),
-		MaxRefresh:     CfgGet(ctx, "gToken.MaxRefresh").Int64(),
-		TokenDelimiter: CfgGet(ctx, "gToken.TokenDelimiter").String(),
-		EncryptKey:     CfgGet(ctx, "gToken.EncryptKey").Bytes(),
-		MultiLogin:     CfgGet(ctx, "gToken.MultiLogin").Bool(),
+		CacheMode:  CfgGet(ctx, "gToken.CacheMode").Int8(),
+		EncryptKey: CfgGet(ctx, "gToken.EncryptKey").Bytes(),
+		MultiLogin: CfgGet(ctx, "gToken.MultiLogin").Bool(),
 	})
 
 	// 调试路由
