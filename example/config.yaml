@@ -4,8 +4,8 @@ server:
   LogPath: ./logs
 
 gToken:
-  # 缓存模式 1 gcache 2 gredis
-  CacheMode: 1
+  # 缓存模式 1 gcache 2 gredis 3 gfile
+  CacheMode: 3
   # 是否支持多端登录
   MultiLogin: true
   CachePreKey: "GToken:"
@@ -18,6 +18,6 @@ gToken:
 # Redis 配置
 redis:
   default:
-    address: 10.96.81.240:6379
+    address: 127.0.0.1:6379
     db: 0
     pass:

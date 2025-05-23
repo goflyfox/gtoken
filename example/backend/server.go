@@ -3,10 +3,10 @@ package backend
 import (
 	"context"
 	"github.com/goflyfox/gtoken/v2/gtoken"
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
@@ -21,9 +21,6 @@ func Start() {
 
 	g.Log().Info(ctx, "########service start...")
 
-	if fileConfig, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile); ok {
-		fileConfig.SetPath("../config")
-	}
 	server = g.Server(TestServerName)
 	InitRouter(server)
 

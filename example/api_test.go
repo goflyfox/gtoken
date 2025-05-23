@@ -216,60 +216,6 @@ func TestLogin(t *testing.T) {
 	delete(Token, Username)
 }
 
-func TestLogout(t *testing.T) {
-	t.Log(" logout test ")
-	data := Post(t, "/user/logout", "username="+Username)
-	if data.Code == gcode.CodeOK.Code() {
-		t.Log(data)
-	} else {
-		t.Error("error:", data)
-	}
-	delete(Token, Username)
-}
-
-func Post(t *testing.T, urlPath string, data ...interface{}) backend.Resp {
-	ctx := context.TODO()
-
-	client := g.Client()
-	client.SetHeader("Authorization", "Bearer "+getToken(t))
-	content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
-	var respData backend.Resp
-	err := json.Unmarshal([]byte(content), &respData)
-	if err != nil {
-		t.Error("error:", err)
-	}
-	return respData
-}
-
-func getToken(t *testing.T) string {
-	ctx := context.TODO()
-
-	if Token[Username] != "" {
-		return Token[Username]
-	}
-
-	if r, e := g.Client().Post(ctx, TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
-
-		content := string(r.ReadAll())
-
-		var respData backend.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-
-		if respData.Code != gcode.CodeOK.Code() {
-			t.Error("error:", "resp fail:", respData)
-		}
-
-		Token[Username] = gconv.String(gconv.Map(respData.Data)["token"])
-	}
-	return Token[Username]
-}
-
 func TestMultiLogin(t *testing.T) {
 	ctx := context.TODO()
 
@@ -333,4 +279,58 @@ func TestMultiLogin(t *testing.T) {
 			t.Error("error:", "token same ")
 		}
 	}
+}
+
+func TestLogout(t *testing.T) {
+	t.Log(" logout test ")
+	data := Post(t, "/user/logout", "username="+Username)
+	if data.Code == gcode.CodeOK.Code() {
+		t.Log(data)
+	} else {
+		t.Error("error:", data)
+	}
+	delete(Token, Username)
+}
+
+func Post(t *testing.T, urlPath string, data ...interface{}) backend.Resp {
+	ctx := context.TODO()
+
+	client := g.Client()
+	client.SetHeader("Authorization", "Bearer "+getToken(t))
+	content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
+	var respData backend.Resp
+	err := json.Unmarshal([]byte(content), &respData)
+	if err != nil {
+		t.Error("error:", err)
+	}
+	return respData
+}
+
+func getToken(t *testing.T) string {
+	ctx := context.TODO()
+
+	if Token[Username] != "" {
+		return Token[Username]
+	}
+
+	if r, e := g.Client().Post(ctx, TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
+		t.Error("error:", e)
+	} else {
+		defer r.Close()
+
+		content := string(r.ReadAll())
+
+		var respData backend.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Error("error:", err)
+		}
+
+		if respData.Code != gcode.CodeOK.Code() {
+			t.Error("error:", "resp fail:", respData)
+		}
+
+		Token[Username] = gconv.String(gconv.Map(respData.Data)["token"])
+	}
+	return Token[Username]
 }

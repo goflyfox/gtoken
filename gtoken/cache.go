@@ -25,6 +25,7 @@ type Cache interface {
 
 // DefaultCache 默认缓存
 type DefaultCache struct {
+	Cache *gcache.Cache
 	// 缓存模式 1 gcache 2 gredis 默认1
 	Mode int8
 	// 缓存key前缀
@@ -39,8 +40,11 @@ func NewDefaultCache(mode int8, preKey string, timeout int64) *DefaultCache {
 		PreKey:  preKey,
 		Timeout: timeout,
 	}
+	c.Cache = gcache.New()
 	if c.Mode == CacheModeFile {
 		c.initFileCache(gctx.New())
+	} else if c.Mode == CacheModeRedis {
+		c.Cache.SetAdapter(gcache.NewAdapterRedis(g.Redis()))
 	}
 	return c
 
@@ -55,7 +59,7 @@ func (c *DefaultCache) Set(ctx context.Context, cacheKey string, cacheValue g.Ma
 	if err != nil {
 		return err
 	}
-	err = gcache.Set(ctx, c.PreKey+cacheKey, string(value), gconv.Duration(c.Timeout)*time.Millisecond)
+	err = c.Cache.Set(ctx, c.PreKey+cacheKey, string(value), gconv.Duration(c.Timeout)*time.Millisecond)
 	if err != nil {
 		return err
 	}
@@ -67,7 +71,7 @@ func (c *DefaultCache) Set(ctx context.Context, cacheKey string, cacheValue g.Ma
 
 // Get 获取缓存
 func (c *DefaultCache) Get(ctx context.Context, cacheKey string) (g.Map, error) {
-	dataVar, err := gcache.Get(ctx, c.PreKey+cacheKey)
+	dataVar, err := c.Cache.Get(ctx, c.PreKey+cacheKey)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +88,7 @@ func (c *DefaultCache) Get(ctx context.Context, cacheKey string) (g.Map, error) 
 
 // Remove 删除缓存
 func (c *DefaultCache) Remove(ctx context.Context, cacheKey string) error {
-	_, err := gcache.Remove(ctx, c.PreKey+cacheKey)
+	_, err := c.Cache.Remove(ctx, c.PreKey+cacheKey)
 	if c.Mode == CacheModeFile {
 		c.writeFileCache(ctx)
 	}
@@ -93,7 +97,7 @@ func (c *DefaultCache) Remove(ctx context.Context, cacheKey string) error {
 
 func (c *DefaultCache) writeFileCache(ctx context.Context) {
 	file := gfile.Temp(CacheModeFileDat)
-	data, e := gcache.Data(ctx)
+	data, e := c.Cache.Data(ctx)
 	if e != nil {
 		g.Log().Error(ctx, "[GToken]cache writeFileCache data error", e)
 	}
@@ -105,6 +109,7 @@ func (c *DefaultCache) writeFileCache(ctx context.Context) {
 
 func (c *DefaultCache) initFileCache(ctx context.Context) {
 	file := gfile.Temp(CacheModeFileDat)
+	g.Log().Info(ctx, "file cache init", file)
 	if !gfile.Exists(file) {
 		return
 	}
@@ -114,6 +119,6 @@ func (c *DefaultCache) initFileCache(ctx context.Context) {
 		return
 	}
 	for k, v := range maps {
-		gcache.Set(ctx, k, v, gconv.Duration(c.Timeout)*time.Millisecond)
+		c.Cache.Set(ctx, k, v, gconv.Duration(c.Timeout)*time.Millisecond)
 	}
 }

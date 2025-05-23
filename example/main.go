@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
 	"gtoken-demo/backend"
 )
@@ -12,9 +11,6 @@ func main() {
 
 	g.Log().Info(ctx, "########service start...")
 
-	if fileConfig, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile); ok {
-		fileConfig.SetPath("../config")
-	}
 	server := g.Server()
 	backend.InitRouter(server)
 
