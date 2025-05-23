@@ -39,12 +39,14 @@ var gToken gtoken.Token
 */
 func InitRouter(s *ghttp.Server) {
 	ctx := gctx.New()
+
+	options := &gtoken.Options{}
+	err := g.Cfg().MustGet(ctx, "gToken").Struct(options)
+	if err != nil {
+		panic("options init fail")
+	}
 	// 创建gtoken对象
-	gToken = gtoken.NewDefaultToken(gtoken.Options{
-		CacheMode:  CfgGet(ctx, "gToken.CacheMode").Int8(),
-		EncryptKey: CfgGet(ctx, "gToken.EncryptKey").Bytes(),
-		MultiLogin: CfgGet(ctx, "gToken.MultiLogin").Bool(),
-	})
+	gToken = gtoken.NewDefaultToken(*options)
 
 	// 调试路由
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -106,7 +108,7 @@ func InitRouter(s *ghttp.Server) {
 }
 
 func CfgGet(ctx context.Context, name string) *gvar.Var {
-	gVar := g.Config().MustGet(ctx, name)
+	gVar := g.Cfg().MustGet(ctx, name)
 	return gVar
 }
 

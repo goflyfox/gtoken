@@ -109,7 +109,7 @@ func (c *DefaultCache) writeFileCache(ctx context.Context) {
 
 func (c *DefaultCache) initFileCache(ctx context.Context) {
 	file := gfile.Temp(CacheModeFileDat)
-	g.Log().Info(ctx, "file cache init", file)
+	g.Log().Debug(ctx, "file cache init", file)
 	if !gfile.Exists(file) {
 		return
 	}

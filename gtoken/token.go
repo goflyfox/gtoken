@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -52,6 +53,7 @@ func NewDefaultToken(options Options) Token {
 		Codec:   NewDefaultCodec(options.TokenDelimiter, options.EncryptKey),
 		Cache:   NewDefaultCache(options.CacheMode, options.CachePreKey, options.Timeout),
 	}
+	g.Log().Debug(gctx.New(), "token options", options)
 	return gfToken
 }
 
