@@ -32,7 +32,7 @@ func Stop() {
 	server.Shutdown()
 }
 
-var gfToken gtoken.Token
+var gToken gtoken.Token
 
 /*
 统一路由注册
@@ -40,7 +40,7 @@ var gfToken gtoken.Token
 func InitRouter(s *ghttp.Server) {
 	ctx := gctx.New()
 	// 创建gtoken对象
-	gfToken = gtoken.NewDefaultToken(gtoken.Options{
+	gToken = gtoken.NewDefaultToken(gtoken.Options{
 		CacheMode:      CfgGet(ctx, "gToken.CacheMode").Int8(),
 		CachePreKey:    CfgGet(ctx, "gToken.CachePreKey").String(),
 		Timeout:        CfgGet(ctx, "gToken.Timeout").Int64(),
@@ -59,12 +59,12 @@ func InitRouter(s *ghttp.Server) {
 
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
-		// 注册GfToken中间件
-		group.Middleware(gtoken.NewDefaultMiddleware(gfToken, "/user/info", "/system/user/info").Auth)
+		// 注册gToken中间件
+		group.Middleware(gtoken.NewDefaultMiddleware(gToken, "/user/info", "/system/user/info").Auth)
 		// 获取登录扩展属性
 		group.ALL("/system/data", func(r *ghttp.Request) {
 			// 获取登陆信息
-			_, data, err := gfToken.Get(r.Context(), r.GetCtxVar(gtoken.KeyUserKey).String())
+			_, data, err := gToken.Get(r.Context(), r.GetCtxVar(gtoken.KeyUserKey).String())
 			if err != nil {
 				r.Response.WriteJson(RespError(err))
 			}
@@ -81,7 +81,7 @@ func InitRouter(s *ghttp.Server) {
 		})
 		group.ALL("/user/logout", func(r *ghttp.Request) {
 			// 登出销毁Token
-			_ = gfToken.Destroy(ctx, r.GetCtxVar(gtoken.KeyUserKey).String())
+			_ = gToken.Destroy(ctx, r.GetCtxVar(gtoken.KeyUserKey).String())
 			r.Response.WriteJson(RespSuccess("user logout"))
 		})
 	})
@@ -95,7 +95,7 @@ func InitRouter(s *ghttp.Server) {
 			r.ExitAll()
 		}
 		// 认证成功调用Generate生成Token
-		token, err := gfToken.Generate(ctx, username, "1")
+		token, err := gToken.Generate(ctx, username, "1")
 		if err != nil {
 			r.Response.WriteJson(RespError(err))
 			r.ExitAll()

@@ -8,12 +8,7 @@ gToken:
   CacheMode: 3
   # 是否支持多端登录
   MultiLogin: true
-  CachePreKey: "GToken:"
-  Timeout: 0
-  MaxRefresh: 0
-  TokenDelimiter: "_"
   EncryptKey: "koi29a83idakguqjq29asd9asd8a7jhq"
-  AuthFailMsg: "登录超时，请重新登录"
 
 # Redis 配置
 redis:

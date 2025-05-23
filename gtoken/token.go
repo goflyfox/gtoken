@@ -23,8 +23,8 @@ type Token interface {
 	GetOptions() Options
 }
 
-// GfTokenV2 gtoken结构体
-type GfTokenV2 struct {
+// GTokenV2 gtoken结构体
+type GTokenV2 struct {
 	Options Options
 	Codec   Codec
 	Cache   Cache
@@ -47,7 +47,7 @@ func NewDefaultToken(options Options) Token {
 	if options.TokenDelimiter == "" {
 		options.TokenDelimiter = DefaultTokenDelimiter
 	}
-	gfToken := &GfTokenV2{
+	gfToken := &GTokenV2{
 		Options: options,
 		Codec:   NewDefaultCodec(options.TokenDelimiter, options.EncryptKey),
 		Cache:   NewDefaultCache(options.CacheMode, options.CachePreKey, options.Timeout),
@@ -56,7 +56,7 @@ func NewDefaultToken(options Options) Token {
 }
 
 // Generate 生成 Token
-func (m *GfTokenV2) Generate(ctx context.Context, userKey string, data any) (token string, err error) {
+func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (token string, err error) {
 	if m.Options.MultiLogin {
 		// 支持多端重复登录，如果获取到返回相同token
 		token, _, err = m.Get(ctx, userKey)
@@ -85,7 +85,7 @@ func (m *GfTokenV2) Generate(ctx context.Context, userKey string, data any) (tok
 }
 
 // Validate 验证 Token
-func (m *GfTokenV2) Validate(ctx context.Context, token string) (userKey string, err error) {
+func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, err error) {
 	if token == "" {
 		err = gerror.NewCode(gcode.CodeInvalidParameter, MsgErrValidate)
 		return
@@ -123,7 +123,7 @@ func (m *GfTokenV2) Validate(ctx context.Context, token string) (userKey string,
 }
 
 // Get 通过userKey获取Token
-func (m *GfTokenV2) Get(ctx context.Context, userKey string) (token string, data any, err error) {
+func (m *GTokenV2) Get(ctx context.Context, userKey string) (token string, data any, err error) {
 	userCache, err := m.Cache.Get(ctx, userKey)
 	if err != nil {
 		return "", nil, err
@@ -135,10 +135,10 @@ func (m *GfTokenV2) Get(ctx context.Context, userKey string) (token string, data
 }
 
 // Destroy 通过userKey销毁Token
-func (m *GfTokenV2) Destroy(ctx context.Context, userKey string) error {
+func (m *GTokenV2) Destroy(ctx context.Context, userKey string) error {
 	return m.Cache.Remove(ctx, userKey)
 }
 
-func (m *GfTokenV2) GetOptions() Options {
+func (m *GTokenV2) GetOptions() Options {
 	return m.Options
 }
