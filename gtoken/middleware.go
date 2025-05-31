@@ -37,7 +37,7 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	if err != nil {
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
 			Code:    gerror.Code(err).Code(),
-			Message: gerror.Code(err).Message(),
+			Message: gerror.Code(err).Message() + ":" + err.Error(),
 			Data:    gerror.Code(err).Detail(),
 		})
 		return
@@ -47,14 +47,18 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	if err != nil {
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
 			Code:    gerror.Code(err).Code(),
-			Message: gerror.Code(err).Message(),
+			Message: gerror.Code(err).Message() + ":" + err.Error(),
 			Data:    gerror.Code(err).Detail(),
 		})
 		return
 	}
 	r.SetCtxVar(KeyUserKey, userKey)
 	r.Middleware.Next()
+}
 
+// GetUserKey 返回请求
+func GetUserKey(ctx context.Context) string {
+	return g.RequestFromCtx(ctx).GetCtxVar(KeyUserKey).String()
 }
 
 // GetRequestToken 返回请求Token

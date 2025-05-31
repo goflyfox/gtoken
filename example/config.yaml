@@ -1,5 +1,5 @@
 server:
-  Address: 127.0.0.1:8082
+  Address: 127.0.0.1:8083
   ServerAgent: gtoken-demo
   LogPath: ./logs
 

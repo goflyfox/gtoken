@@ -1,7 +1,7 @@
-GET http://localhost:8082/system/user
+GET {{host}}/system/user
 
 ### 登陆
-GET http://localhost:8082/login?username=a&passwd=2
+GET {{host}}/login?username=a&passwd=2
 
 > {%
   client.test("test",function() {
@@ -13,8 +13,11 @@ GET http://localhost:8082/login?username=a&passwd=2
 %}
 
 ###
-GET http://localhost:8082/system/user?token={{token}}
+GET {{host}}/system/user?token={{token}}
 
 ### 登出
-GET http://localhost:8082/user/logout?token={{token}}
+GET {{host}}/user/logout?token={{token}}
+
+###
+GET {{host}}/user/info
 
