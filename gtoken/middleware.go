@@ -7,6 +7,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 )
 
@@ -24,6 +25,7 @@ func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 }
 
 // Auth 认证拦截
+// 认证失败统一错误码：gcode.CodeBusinessValidationFailed
 func (m Middleware) Auth(r *ghttp.Request) {
 	urlPath := r.URL.Path
 	if !authPath(r.Context(), urlPath, m.AuthExcludePaths) {
@@ -36,8 +38,8 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	token, err := GetRequestToken(r)
 	if err != nil {
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
-			Code:    gerror.Code(err).Code(),
-			Message: gerror.Code(err).Message() + ":" + err.Error(),
+			Code:    gcode.CodeBusinessValidationFailed.Code(),
+			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
 			Data:    gerror.Code(err).Detail(),
 		})
 		return
@@ -46,8 +48,8 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	userKey, err := m.Token.Validate(r.Context(), token)
 	if err != nil {
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
-			Code:    gerror.Code(err).Code(),
-			Message: gerror.Code(err).Message() + ":" + err.Error(),
+			Code:    gcode.CodeBusinessValidationFailed.Code(),
+			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
 			Data:    gerror.Code(err).Detail(),
 		})
 		return
