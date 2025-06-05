@@ -15,12 +15,15 @@ type Middleware struct {
 	Token Token
 	// 拦截排除地址
 	AuthExcludePaths g.SliceStr
+	// 错误码，默认： gcode.CodeBusinessValidationFailed
+	ErrCode int
 }
 
 func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 	return Middleware{
 		Token:            token,
 		AuthExcludePaths: excludePaths,
+		ErrCode:          gcode.CodeBusinessValidationFailed.Code(),
 	}
 }
 
@@ -38,7 +41,7 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	token, err := GetRequestToken(r)
 	if err != nil {
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
-			Code:    gcode.CodeBusinessValidationFailed.Code(),
+			Code:    m.ErrCode,
 			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
 			Data:    gerror.Code(err).Detail(),
 		})
@@ -48,7 +51,7 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	userKey, err := m.Token.Validate(r.Context(), token)
 	if err != nil {
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
-			Code:    gcode.CodeBusinessValidationFailed.Code(),
+			Code:    m.ErrCode,
 			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
 			Data:    gerror.Code(err).Detail(),
 		})

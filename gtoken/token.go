@@ -59,6 +59,11 @@ func NewDefaultToken(options Options) Token {
 
 // Generate 生成 Token
 func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (token string, err error) {
+	if userKey == "" {
+		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
+		return
+	}
+
 	if m.Options.MultiLogin {
 		// 支持多端重复登录，如果获取到返回相同token
 		token, _, err = m.Get(ctx, userKey)
@@ -69,6 +74,7 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 
 	token, err = m.Codec.Encode(ctx, userKey)
 	if err != nil {
+		err = gerror.WrapCode(gcode.CodeInternalError, err)
 		return
 	}
 	userCache := g.Map{
@@ -80,6 +86,7 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 
 	err = m.Cache.Set(ctx, userKey, userCache)
 	if err != nil {
+		err = gerror.WrapCode(gcode.CodeInternalError, err)
 		return
 	}
 
@@ -89,12 +96,13 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 // Validate 验证 Token
 func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, err error) {
 	if token == "" {
-		err = gerror.NewCode(gcode.CodeInvalidParameter, MsgErrValidate)
+		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrValidate)
 		return
 	}
 
 	userKey, err = m.Codec.Decrypt(ctx, token)
 	if err != nil {
+		err = gerror.WrapCode(gcode.CodeInvalidParameter, err)
 		return
 	}
 	userCache, err := m.Cache.Get(ctx, userKey)
@@ -102,11 +110,11 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 		return
 	}
 	if userCache == nil {
-		err = gerror.NewCode(gcode.CodeValidationFailed, MsgErrValidate)
+		err = gerror.WrapCode(gcode.CodeInternalError, err)
 		return
 	}
 	if token != userCache[KeyToken] {
-		err = gerror.NewCode(gcode.CodeValidationFailed, MsgErrValidate)
+		err = gerror.WrapCode(gcode.CodeInvalidParameter, err)
 		return
 	}
 
@@ -117,6 +125,7 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 		userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
 		err = m.Cache.Set(ctx, userKey, userCache)
 		if err != nil {
+			err = gerror.WrapCode(gcode.CodeInternalError, err)
 			return
 		}
 	}
@@ -126,19 +135,32 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 
 // Get 通过userKey获取Token
 func (m *GTokenV2) Get(ctx context.Context, userKey string) (token string, data any, err error) {
+	if userKey == "" {
+		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
+		return
+	}
+
 	userCache, err := m.Cache.Get(ctx, userKey)
 	if err != nil {
-		return "", nil, err
+		return "", nil, gerror.WrapCode(gcode.CodeInternalError, err)
 	}
 	if userCache == nil {
-		return "", nil, gerror.NewCode(gcode.CodeValidationFailed, MsgErrValidate)
+		return "", nil, gerror.NewCode(gcode.CodeInternalError, MsgErrDataEmpty)
 	}
 	return gconv.String(userCache[KeyToken]), userCache[KeyData], nil
 }
 
 // Destroy 通过userKey销毁Token
 func (m *GTokenV2) Destroy(ctx context.Context, userKey string) error {
-	return m.Cache.Remove(ctx, userKey)
+	if userKey == "" {
+		return gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
+	}
+
+	err := m.Cache.Remove(ctx, userKey)
+	if err != nil {
+		return gerror.WrapCode(gcode.CodeInternalError, err)
+	}
+	return nil
 }
 
 func (m *GTokenV2) GetOptions() Options {

@@ -2,11 +2,10 @@ package gtoken
 
 import (
 	"context"
+	"errors"
 	"github.com/gogf/gf/v2/crypto/gaes"
 	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/encoding/gbase64"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/grand"
 )
@@ -45,20 +44,20 @@ func NewDefaultCodec(delimiter string, encryptKey []byte) *DefaultCodec {
 // Encode token加密方法
 func (c *DefaultCodec) Encode(ctx context.Context, userKey string) (token string, err error) {
 	if userKey == "" {
-		return "", gerror.NewCode(gcode.CodeInvalidParameter, MsgErrUserKeyEmpty)
+		return "", errors.New(MsgErrUserKeyEmpty)
 	}
 
 	// 随机
 	randStr, err := gmd5.Encrypt(grand.Letters(10))
 	if err != nil {
-		return "", gerror.Wrap(err, MsgErrTokenGen)
+		return "", err
 	}
 
 	encryptBeforeStr := userKey + c.Delimiter + randStr
 
 	encryptByte, err := gaes.Encrypt([]byte(encryptBeforeStr), c.EncryptKey)
 	if err != nil {
-		return "", gerror.Wrap(err, MsgErrTokenGen)
+		return "", err
 	}
 
 	return gbase64.EncodeToString(encryptByte), nil
@@ -67,20 +66,20 @@ func (c *DefaultCodec) Encode(ctx context.Context, userKey string) (token string
 // Decrypt token解密方法
 func (m *DefaultCodec) Decrypt(ctx context.Context, token string) (userKey string, err error) {
 	if token == "" {
-		return "", gerror.NewCode(gcode.CodeInvalidParameter, MsgErrTokenEmpty)
+		return "", errors.New(MsgErrTokenEmpty)
 	}
 
 	token64, err := gbase64.Decode([]byte(token))
 	if err != nil {
-		return "", gerror.Wrap(err, MsgErrTokenInvalid)
+		return "", err
 	}
 	decryptStr, err := gaes.Decrypt(token64, m.EncryptKey)
 	if err != nil {
-		return "", gerror.Wrap(err, MsgErrTokenInvalid)
+		return "", err
 	}
 	decryptArray := gstr.Split(string(decryptStr), m.Delimiter)
 	if len(decryptArray) < 2 {
-		return "", gerror.NewCode(gcode.CodeValidationFailed, MsgErrTokenLen)
+		return "", errors.New(MsgErrTokenLen)
 	}
 	return decryptArray[0], nil
 }

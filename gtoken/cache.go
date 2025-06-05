@@ -2,9 +2,8 @@ package gtoken
 
 import (
 	"context"
+	"errors"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -53,7 +52,7 @@ func NewDefaultCache(mode int8, preKey string, timeout int64) *DefaultCache {
 // Set 设置缓存
 func (c *DefaultCache) Set(ctx context.Context, cacheKey string, cacheValue g.Map) error {
 	if cacheValue == nil {
-		return gerror.NewCode(gcode.CodeInvalidParameter, MsgErrDataEmpty)
+		return errors.New(MsgErrDataEmpty)
 	}
 	value, err := gjson.Encode(cacheValue)
 	if err != nil {
