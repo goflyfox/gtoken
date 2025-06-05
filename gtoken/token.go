@@ -96,7 +96,7 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 // Validate 验证 Token
 func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, err error) {
 	if token == "" {
-		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrValidate)
+		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrTokenEmpty)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 		return
 	}
 	if token != userCache[KeyToken] {
-		err = gerror.NewCode(gcode.CodeInvalidParameter, MsgErrDataEmpty)
+		err = gerror.NewCode(gcode.CodeInvalidParameter, MsgErrValidate)
 		return
 	}
 

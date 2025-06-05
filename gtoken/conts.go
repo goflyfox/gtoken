@@ -20,8 +20,6 @@ const (
 const (
 	MsgErrUserKeyEmpty = "userKey empty"
 	MsgErrTokenEmpty   = "token is empty"
-	MsgErrTokenGen     = "token gen error"
-	MsgErrTokenInvalid = "token is invalid"
 	MsgErrTokenLen     = "token len error"
 	MsgErrValidate     = "user validate error"
 	MsgErrDataEmpty    = "cache value is nil"
