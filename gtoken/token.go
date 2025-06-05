@@ -110,11 +110,11 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 		return
 	}
 	if userCache == nil {
-		err = gerror.WrapCode(gcode.CodeInternalError, err)
+		err = gerror.NewCode(gcode.CodeInternalError, MsgErrDataEmpty)
 		return
 	}
 	if token != userCache[KeyToken] {
-		err = gerror.WrapCode(gcode.CodeInvalidParameter, err)
+		err = gerror.NewCode(gcode.CodeInvalidParameter, MsgErrDataEmpty)
 		return
 	}
 
