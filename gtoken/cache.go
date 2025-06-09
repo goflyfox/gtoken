@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"time"
 )
@@ -27,7 +28,7 @@ type DefaultCache struct {
 	Cache *gcache.Cache
 	// 缓存模式 1 gcache 2 gredis 默认1
 	Mode int8
-	// 缓存key前缀
+	// 缓存key前缀 每隔缓存都需要独立的PreKey，否则会冲突
 	PreKey string
 	// 超时时间 默认10天（毫秒）
 	Timeout int64
@@ -95,7 +96,8 @@ func (c *DefaultCache) Remove(ctx context.Context, cacheKey string) error {
 }
 
 func (c *DefaultCache) writeFileCache(ctx context.Context) {
-	file := gfile.Temp(CacheModeFileDat)
+	fileName := gstr.Replace(c.PreKey, ":", "_") + CacheModeFileDat
+	file := gfile.Temp(fileName)
 	data, e := c.Cache.Data(ctx)
 	if e != nil {
 		g.Log().Error(ctx, "[GToken]cache writeFileCache data error", e)
@@ -107,7 +109,8 @@ func (c *DefaultCache) writeFileCache(ctx context.Context) {
 }
 
 func (c *DefaultCache) initFileCache(ctx context.Context) {
-	file := gfile.Temp(CacheModeFileDat)
+	fileName := gstr.Replace(c.PreKey, ":", "_") + CacheModeFileDat
+	file := gfile.Temp(fileName)
 	g.Log().Debug(ctx, "file cache init", file)
 	if !gfile.Exists(file) {
 		return
