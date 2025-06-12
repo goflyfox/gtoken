@@ -1,5 +1,14 @@
 Change Log 更新说明
 ------------------------------
+## 2025-06-12 v2.0.0
+1. 架构全面升级，版本更新到v2.X.X，不再兼容v1.X.X
+2. 通过`go get -u -v github.com/goflyfox/gtoken/v2`获取最新版本，升级需谨慎
+3. 独立Token、Codec、Cache接口，方便扩展
+4. 采用goframe标准中间件方式认证，调用更加直观
+5. 具体使用细节见项目ReadMe文件
+6. 优化错误码展示，统一中间件返回错误码
+7. 修复多个gtoken实例，文件缓存复用问题
+
 ## 2025-05-23 v2.0.0-beta
 1. 架构全面升级，版本更新到v2.X.X，不再兼容v1.X.X
 2. 通过`go get -u -v github.com/goflyfox/gtoken/v2`获取最新版本，升级需谨慎
