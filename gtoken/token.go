@@ -2,9 +2,11 @@ package gtoken
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -13,9 +15,9 @@ import (
 // Token 接口
 type Token interface {
 	// Generate 生成 Token
-	Generate(ctx context.Context, userKey string, data any) (token string, err error)
+	Generate(ctx context.Context, userKey string, data g.Map) (token string, err error)
 	// Validate 验证 Token
-	Validate(ctx context.Context, token string) (userKey string, err error)
+	Validate(ctx context.Context, token string) (userCacheMap g.Map, err error)
 	// Get 获取 Token
 	Get(ctx context.Context, userKey string) (token string, data any, err error)
 	// Destroy 销毁 Token
@@ -31,7 +33,7 @@ type GTokenV2 struct {
 	Cache   Cache
 }
 
-func NewDefaultToken(options Options) Token {
+func NewDefaultToken(options Options, resFunc ...func(r *ghttp.Request)) Token {
 	if options.CacheMode == 0 {
 		options.CacheMode = CacheModeCache
 	}
@@ -48,17 +50,28 @@ func NewDefaultToken(options Options) Token {
 	if options.TokenDelimiter == "" {
 		options.TokenDelimiter = DefaultTokenDelimiter
 	}
+	if len(resFunc) > 0 {
+		options.ResFun = resFunc[0]
+	}
+
 	gfToken := &GTokenV2{
 		Options: options,
 		Codec:   NewDefaultCodec(options.TokenDelimiter, options.EncryptKey),
 		Cache:   NewDefaultCache(options.CacheMode, options.CachePreKey, options.Timeout),
 	}
-	g.Log().Debug(gctx.New(), "token options", options)
+
+	g.Log().Info(
+		gctx.New(),
+		"token options: ",
+		fmt.Sprintf(
+			"缓存模式: %d 缓存key前缀: %s 超时时间: %d 缓存刷新时间: %d Token分隔符: %s Token加密key: %s 是否支持多端登录: %t 排除拦截地址: %v 是否自定义校验失败返回方法: %t",
+			options.CacheMode, options.CachePreKey, options.Timeout, options.MaxRefresh, options.TokenDelimiter, options.EncryptKey, options.MultiLogin, options.AuthExcludePaths, options.ResFun == nil))
+
 	return gfToken
 }
 
 // Generate 生成 Token
-func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (token string, err error) {
+func (m *GTokenV2) Generate(ctx context.Context, userKey string, data g.Map) (token string, err error) {
 	if userKey == "" {
 		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
 		return
@@ -77,6 +90,7 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 		err = gerror.WrapCode(gcode.CodeInternalError, err)
 		return
 	}
+
 	userCache := g.Map{
 		KeyUserKey:    userKey,
 		KeyToken:      token,
@@ -94,17 +108,18 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 }
 
 // Validate 验证 Token
-func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, err error) {
+func (m *GTokenV2) Validate(ctx context.Context, token string) (userCacheMap g.Map, err error) {
 	if token == "" {
 		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrTokenEmpty)
 		return
 	}
 
-	userKey, err = m.Codec.Decrypt(ctx, token)
+	userKey, err := m.Codec.Decrypt(ctx, token)
 	if err != nil {
 		err = gerror.WrapCode(gcode.CodeInvalidParameter, err)
 		return
 	}
+
 	userCache, err := m.Cache.Get(ctx, userKey)
 	if err != nil {
 		return
@@ -115,6 +130,12 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 	}
 	if token != userCache[KeyToken] {
 		err = gerror.NewCode(gcode.CodeInvalidParameter, MsgErrValidate)
+		return
+	}
+
+	err = gconv.Scan(userCache[KeyData], &userCacheMap)
+	if err != nil {
+		err = gerror.NewCode(gcode.CodeInternalError, MsgErrDataEmpty)
 		return
 	}
 
@@ -163,6 +184,7 @@ func (m *GTokenV2) Destroy(ctx context.Context, userKey string) error {
 	return nil
 }
 
+// GetOptions 获取Options配置
 func (m *GTokenV2) GetOptions() Options {
 	return m.Options
 }
