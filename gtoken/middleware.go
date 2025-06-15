@@ -30,8 +30,7 @@ func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 // Auth 认证拦截
 // 认证失败统一错误码：gcode.CodeBusinessValidationFailed
 func (m Middleware) Auth(r *ghttp.Request) {
-	urlPath := r.URL.Path
-	if !authPath(r.Context(), urlPath, m.AuthExcludePaths) {
+	if m.HasExcludePath(r) {
 		// 如果不需要认证，继续
 		r.Middleware.Next()
 		return
@@ -59,6 +58,14 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	}
 	r.SetCtxVar(KeyUserKey, userKey)
 	r.Middleware.Next()
+}
+
+func (m Middleware) HasExcludePath(r *ghttp.Request) bool {
+	urlPath := r.URL.Path
+	if !authPath(r.Context(), urlPath, m.AuthExcludePaths) {
+		return true
+	}
+	return false
 }
 
 // GetUserKey 返回请求
