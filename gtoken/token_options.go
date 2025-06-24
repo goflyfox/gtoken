@@ -1,8 +1,7 @@
 package gtoken
 
 import (
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
+	"fmt"
 )
 
 type Options struct {
@@ -20,8 +19,11 @@ type Options struct {
 	EncryptKey []byte
 	// 是否支持多端登录，默认false
 	MultiLogin bool
-	// 排除拦截的地址
-	AuthExcludePaths g.SliceStr
-	// 自定义Token校验失败返回方法
-	ResFun func(r *ghttp.Request)
+}
+
+func (o *Options) String() string {
+	return fmt.Sprintf("Options{"+
+		"CacheMode:%d, CachePreKey:%s, Timeout:%d"+
+		", MaxRefresh:%d, TokenDelimiter:%s, MultiLogin:%v"+
+		"}", o.CacheMode, o.CachePreKey, o.Timeout, o.MaxRefresh, o.TokenDelimiter, o.MultiLogin)
 }

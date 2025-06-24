@@ -76,6 +76,9 @@ func (c *DefaultCache) Get(ctx context.Context, cacheKey string) (g.Map, error) 
 	if err != nil {
 		return nil, err
 	}
+	if dataVar.IsNil() {
+		return nil, nil
+	}
 	return dataVar.Map(), nil
 }
 

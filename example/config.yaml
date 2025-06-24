@@ -1,5 +1,5 @@
 server:
-  Address: 127.0.0.1:8080
+  Address: 127.0.0.1:8083
   ServerAgent: gtoken-demo
   LogPath: ./logs
 
@@ -10,13 +10,10 @@ gToken:
   MultiLogin: true
   # Token加密key
   EncryptKey: "koi29a83idakguqjq29asd9asd8a7jhq"
-  # 排除拦截的地址
-  AuthExcludePaths:
-    - "/user/info"
 
 # Redis 配置
 redis:
   default:
-    address: 192.168.19.105:6378
+    address: 127.0.0.1:6379
     db: 0
-    pass: "root"
+    pass: demo123
