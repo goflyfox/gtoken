@@ -12,6 +12,7 @@ import (
 )
 
 type Middleware struct {
+	// Token
 	Token Token
 	// 自定义Token校验失败返回方法
 	ResFun func(r *ghttp.Request, err error)

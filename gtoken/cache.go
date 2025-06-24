@@ -26,7 +26,7 @@ type Cache interface {
 // DefaultCache 默认缓存
 type DefaultCache struct {
 	Cache *gcache.Cache
-	// 缓存模式 1 gcache 2 gredis 默认1
+	// 缓存模式 1 gcache 2 gredis 3 gfile 默认1
 	Mode int8
 	// 缓存key前缀 每隔缓存都需要独立的PreKey，否则会冲突
 	PreKey string
@@ -36,18 +36,19 @@ type DefaultCache struct {
 
 func NewDefaultCache(mode int8, preKey string, timeout int64) *DefaultCache {
 	c := &DefaultCache{
+		Cache:   gcache.New(),
 		Mode:    mode,
 		PreKey:  preKey,
 		Timeout: timeout,
 	}
-	c.Cache = gcache.New()
+
 	if c.Mode == CacheModeFile {
 		c.initFileCache(gctx.New())
 	} else if c.Mode == CacheModeRedis {
 		c.Cache.SetAdapter(gcache.NewAdapterRedis(g.Redis()))
 	}
-	return c
 
+	return c
 }
 
 // Set 设置缓存
@@ -75,15 +76,7 @@ func (c *DefaultCache) Get(ctx context.Context, cacheKey string) (g.Map, error) 
 	if err != nil {
 		return nil, err
 	}
-	if dataVar.IsNil() {
-		return nil, nil
-	}
-	var cacheValue g.Map
-	err = gjson.DecodeTo(dataVar, &cacheValue)
-	if err != nil {
-		return nil, err
-	}
-	return cacheValue, nil
+	return dataVar.Map(), nil
 }
 
 // Remove 删除缓存
@@ -121,6 +114,6 @@ func (c *DefaultCache) initFileCache(ctx context.Context) {
 		return
 	}
 	for k, v := range maps {
-		c.Cache.Set(ctx, k, v, gconv.Duration(c.Timeout)*time.Millisecond)
+		_ = c.Cache.Set(ctx, k, v, gconv.Duration(c.Timeout)*time.Millisecond)
 	}
 }
