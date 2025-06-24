@@ -53,7 +53,7 @@ func NewDefaultToken(options Options) Token {
 		Codec:   NewDefaultCodec(options.TokenDelimiter, options.EncryptKey),
 		Cache:   NewDefaultCache(options.CacheMode, options.CachePreKey, options.Timeout),
 	}
-	g.Log().Debug(gctx.New(), "token options", options)
+	g.Log().Debug(gctx.New(), "token options", options.String())
 	return gfToken
 }
 
