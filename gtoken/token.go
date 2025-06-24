@@ -135,7 +135,6 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 			return
 		}
 		if nowTime > gconv.Int64(createTime)+m.Options.MaxRefresh {
-			g.Log().Info(ctx, "refresh token", userKey, refreshNum)
 			userCache[KeyRefreshNum] = refreshNum + 1
 			userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
 			err = m.Cache.Set(ctx, userKey, userCache)
