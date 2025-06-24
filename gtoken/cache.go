@@ -16,7 +16,7 @@ import (
 // Cache 缓存接口
 type Cache interface {
 	// Set 设置缓冲
-	Set(ctx context.Context, cacheKey string, userCache g.Map) error
+	Set(ctx context.Context, cacheKey string, cacheValue g.Map) error
 	// Get 获取缓存
 	Get(ctx context.Context, cacheKey string) (g.Map, error)
 	// Remove 移除缓存
