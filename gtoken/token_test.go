@@ -75,7 +75,6 @@ func TestDestroy(t *testing.T) {
 		u, err := gToken.Validate(ctx, token)
 		assert.NoError(t, err)
 		assert.Equal(t, userKey, u)
-		gToken.Get(ctx, userKey)
 
 		err = gToken.Destroy(ctx, userKey)
 		assert.NoError(t, err)
@@ -99,6 +98,25 @@ func TestGet(t *testing.T) {
 		token2, data2, err := gToken.Get(ctx, userKey)
 		assert.NoError(t, err)
 		assert.Equal(t, token, token2)
+		assert.Equal(t, data, data2)
+
+	}
+}
+
+func TestGetByToken(t *testing.T) {
+	ctx := gctx.New()
+	userKey := "testUser"
+	{
+		gToken := gtoken.NewDefaultToken(gtoken.Options{})
+		data := g.Map{"a": "1"}
+		token, err := gToken.Generate(ctx, userKey, data)
+		assert.NoError(t, err)
+		u, err := gToken.Validate(ctx, token)
+		assert.NoError(t, err)
+		assert.Equal(t, userKey, u)
+		userKey2, data2, err := gToken.GetByToken(ctx, token)
+		assert.NoError(t, err)
+		assert.Equal(t, userKey, userKey2)
 		assert.Equal(t, data, data2)
 
 	}

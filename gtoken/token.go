@@ -16,8 +16,10 @@ type Token interface {
 	Generate(ctx context.Context, userKey string, data any) (token string, err error)
 	// Validate 验证 Token
 	Validate(ctx context.Context, token string) (userKey string, err error)
-	// Get 获取 Token
+	// Get 通过userKey获取token,Data
 	Get(ctx context.Context, userKey string) (token string, data any, err error)
+	// GetByToken 通过token获取userKey,data
+	GetByToken(ctx context.Context, token string) (userKey string, data any, err error)
 	// Destroy 销毁 Token
 	Destroy(ctx context.Context, userKey string) error
 	// GetOptions 获取配置参数
@@ -150,6 +152,29 @@ func (m *GTokenV2) Get(ctx context.Context, userKey string) (token string, data 
 		return "", nil, gerror.NewCode(gcode.CodeInternalError, MsgErrDataEmpty)
 	}
 	return gconv.String(userCache[KeyToken]), userCache[KeyData], nil
+}
+
+// GetByToken 通过token获取userKey,data
+func (m *GTokenV2) GetByToken(ctx context.Context, token string) (userKey string, data any, err error) {
+	if token == "" {
+		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
+		return
+	}
+
+	userKey, err = m.Codec.Decrypt(ctx, token)
+	if err != nil {
+		err = gerror.WrapCode(gcode.CodeInvalidParameter, err)
+		return
+	}
+
+	userCache, err := m.Cache.Get(ctx, userKey)
+	if err != nil {
+		return "", nil, gerror.WrapCode(gcode.CodeInternalError, err)
+	}
+	if userCache == nil {
+		return "", nil, gerror.NewCode(gcode.CodeInternalError, MsgErrDataEmpty)
+	}
+	return userKey, userCache[KeyData], nil
 }
 
 // Destroy 通过userKey销毁Token

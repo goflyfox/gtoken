@@ -63,28 +63,47 @@ func TestHello(t *testing.T) {
 
 func TestUserData(t *testing.T) {
 	// 登录，访问用户信息
-	t.Log("1. execute login and visit user")
-	resp := Post(t, "/system/data", "username="+Username)
-	if resp.Code == gcode.CodeOK.Code() {
-		dataMap := gconv.Map(resp.Data)
-		if dataMap["username"] == Username {
-			t.Log("get user data success", resp)
+	{
+		t.Log("1. execute login and visit user")
+		resp := Post(t, "/system/data", "username="+Username)
+		if resp.Code == gcode.CodeOK.Code() {
+			dataMap := gconv.Map(resp.Data)
+			if dataMap["username"] == Username {
+				t.Log("get user data success", resp)
+			} else {
+				t.Error("user data not eq 1 ", resp)
+			}
 		} else {
-			t.Error("user data not eq 1 ", resp)
+			t.Error("error:", resp)
 		}
-	} else {
-		t.Error("error:", resp)
+	}
+	// 登录，访问用户信息2
+	{
+		t.Log("1. execute login and visit user")
+		resp := Post(t, "/system/data2", "username="+Username)
+		if resp.Code == gcode.CodeOK.Code() {
+			dataMap := gconv.Map(resp.Data)
+			if dataMap["username"] == Username {
+				t.Log("get user data success", resp)
+			} else {
+				t.Error("user data not eq 1 ", resp)
+			}
+		} else {
+			t.Error("error:", resp)
+		}
 	}
 
 	// 登出
-	t.Log("2. execute logout")
-	resp = Post(t, "/user/logout", "username="+Username)
-	if resp.Code == gcode.CodeOK.Code() {
-		t.Log(resp)
-	} else {
-		t.Error("error:", resp)
+	{
+		t.Log("2. execute logout")
+		resp := Post(t, "/user/logout", "username="+Username)
+		if resp.Code == gcode.CodeOK.Code() {
+			t.Log(resp)
+		} else {
+			t.Error("error:", resp)
+		}
+		delete(Token, Username)
 	}
-	delete(Token, Username)
 }
 
 func TestSystemUser(t *testing.T) {

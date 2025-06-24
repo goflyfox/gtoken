@@ -80,6 +80,16 @@ func InitRouter(s *ghttp.Server) {
 			}
 			r.Response.WriteJson(RespSuccess(data))
 		})
+		// 获取登录扩展属性
+		group.ALL("/system/data2", func(r *ghttp.Request) {
+			// 获取登陆信息
+			token, _ := gtoken.GetRequestToken(r)
+			_, data, err := gToken.GetByToken(r.Context(), token)
+			if err != nil {
+				r.Response.WriteJson(RespError(err))
+			}
+			r.Response.WriteJson(RespSuccess(data))
+		})
 		group.ALL("/system/user", func(r *ghttp.Request) {
 			r.Response.WriteJson(RespSuccess("system user"))
 		})
