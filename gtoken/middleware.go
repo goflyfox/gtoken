@@ -31,7 +31,6 @@ func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 			})
 		},
 		AuthExcludePaths: excludePaths,
-		ErrCode:          gcode.CodeBusinessValidationFailed.Code(),
 	}
 }
 
