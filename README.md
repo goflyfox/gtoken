@@ -44,6 +44,7 @@ MaxRefresh int
 2. 注册认证中间件`gtoken.NewDefaultMiddleware(gfToken).Auth`
 3. 登陆认证成功后，生成Token（`gfToken.Generate`）并返回给客户端
 4. 登出时销毁Token(`gfToken.Destroy`)
+5. 建议：由于中间件采用洋葱模型，注册`MiddlewareAuth`认证中间件，放在在`MiddlewareCORS`后，用户权限`MiddlewareUserPermissions`认证和Response处理`MiddlewareHandlerResponse`之前
 
 ```go
 	// 创建gtoken对象
