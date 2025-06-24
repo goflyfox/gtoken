@@ -46,38 +46,33 @@ func (c *DefaultCodec) Encode(ctx context.Context, userKey string) (token string
 	if userKey == "" {
 		return "", errors.New(MsgErrUserKeyEmpty)
 	}
-
 	// 随机
 	randStr, err := gmd5.Encrypt(grand.Letters(10))
 	if err != nil {
 		return "", err
 	}
-
 	encryptBeforeStr := userKey + c.Delimiter + randStr
-
 	encryptByte, err := gaes.Encrypt([]byte(encryptBeforeStr), c.EncryptKey)
 	if err != nil {
 		return "", err
 	}
-
 	return gbase64.EncodeToString(encryptByte), nil
 }
 
 // Decrypt token解密方法
-func (m *DefaultCodec) Decrypt(ctx context.Context, token string) (userKey string, err error) {
+func (c *DefaultCodec) Decrypt(ctx context.Context, token string) (userKey string, err error) {
 	if token == "" {
 		return "", errors.New(MsgErrTokenEmpty)
 	}
-
 	token64, err := gbase64.Decode([]byte(token))
 	if err != nil {
 		return "", err
 	}
-	decryptStr, err := gaes.Decrypt(token64, m.EncryptKey)
+	decryptStr, err := gaes.Decrypt(token64, c.EncryptKey)
 	if err != nil {
 		return "", err
 	}
-	decryptArray := gstr.Split(string(decryptStr), m.Delimiter)
+	decryptArray := gstr.Split(string(decryptStr), c.Delimiter)
 	if len(decryptArray) < 2 {
 		return "", errors.New(MsgErrTokenLen)
 	}

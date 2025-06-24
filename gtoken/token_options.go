@@ -1,7 +1,12 @@
 package gtoken
 
+import (
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+)
+
 type Options struct {
-	// 缓存模式 1 gcache 2 gredis 默认1
+	// 缓存模式 1 gcache 2 gredis 3 gfile 默认1
 	CacheMode int8
 	// 缓存key前缀
 	CachePreKey string
@@ -15,4 +20,8 @@ type Options struct {
 	EncryptKey []byte
 	// 是否支持多端登录，默认false
 	MultiLogin bool
+	// 排除拦截的地址
+	AuthExcludePaths g.SliceStr
+	// 自定义Token校验失败返回方法
+	ResFun func(r *ghttp.Request)
 }

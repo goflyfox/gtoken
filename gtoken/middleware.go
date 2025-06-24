@@ -12,18 +12,16 @@ import (
 )
 
 type Middleware struct {
+	// Token
 	Token Token
-	// 拦截排除地址
-	AuthExcludePaths g.SliceStr
 	// 错误码，默认： gcode.CodeBusinessValidationFailed
 	ErrCode int
 }
 
-func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
+func NewDefaultMiddleware(token Token) Middleware {
 	return Middleware{
-		Token:            token,
-		AuthExcludePaths: excludePaths,
-		ErrCode:          gcode.CodeBusinessValidationFailed.Code(),
+		Token:   token,
+		ErrCode: gcode.CodeBusinessValidationFailed.Code(),
 	}
 }
 
@@ -31,7 +29,7 @@ func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 // 认证失败统一错误码：gcode.CodeBusinessValidationFailed
 func (m Middleware) Auth(r *ghttp.Request) {
 	urlPath := r.URL.Path
-	if !authPath(r.Context(), urlPath, m.AuthExcludePaths) {
+	if !authPath(r.Context(), urlPath, m.Token.GetOptions().AuthExcludePaths) {
 		// 如果不需要认证，继续
 		r.Middleware.Next()
 		return
@@ -40,6 +38,11 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	// 获取请求token
 	token, err := GetRequestToken(r)
 	if err != nil {
+		if m.Token.GetOptions().ResFun != nil {
+			m.Token.GetOptions().ResFun(r)
+			return
+		}
+
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
 			Code:    m.ErrCode,
 			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
@@ -48,8 +51,13 @@ func (m Middleware) Auth(r *ghttp.Request) {
 		return
 	}
 
-	userKey, err := m.Token.Validate(r.Context(), token)
+	userCacheMap, err := m.Token.Validate(r.Context(), token)
 	if err != nil {
+		if m.Token.GetOptions().ResFun != nil {
+			m.Token.GetOptions().ResFun(r)
+			return
+		}
+
 		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
 			Code:    m.ErrCode,
 			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
@@ -57,7 +65,11 @@ func (m Middleware) Auth(r *ghttp.Request) {
 		})
 		return
 	}
-	r.SetCtxVar(KeyUserKey, userKey)
+
+	for k, v := range userCacheMap {
+		r.SetCtxVar(k, v)
+	}
+
 	r.Middleware.Next()
 }
 
