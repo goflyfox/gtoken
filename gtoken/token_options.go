@@ -5,7 +5,7 @@ import (
 )
 
 type Options struct {
-	// 缓存模式 1 gcache 2 gredis 默认1
+	// 缓存模式 1 gcache 2 gredis 3 gfile 默认1
 	CacheMode int8
 	// 缓存key前缀
 	CachePreKey string

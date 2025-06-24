@@ -66,7 +66,8 @@ func TestUserData(t *testing.T) {
 	t.Log("1. execute login and visit user")
 	resp := Post(t, "/system/data", "username="+Username)
 	if resp.Code == gcode.CodeOK.Code() {
-		if resp.Data == "1" {
+		dataMap := gconv.Map(resp.Data)
+		if dataMap["username"] == Username {
 			t.Log("get user data success", resp)
 		} else {
 			t.Error("user data not eq 1 ", resp)

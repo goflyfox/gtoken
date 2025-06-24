@@ -58,7 +58,19 @@ func InitRouter(s *ghttp.Server) {
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
 		// 注册gToken中间件
-		group.Middleware(gtoken.NewDefaultMiddleware(gToken, "/user/info", "/system/user/info").Auth)
+
+		middlewareAuth := gtoken.NewDefaultMiddleware(gToken, "/user/info", "/system/user/info")
+		// token校验失败后的返回方法
+		middlewareAuth.ResFun = func(r *ghttp.Request, err error) {
+			r.Response.WriteJson(g.Map{
+				"code":    500, // 默认: gcode.CodeBusinessValidationFailed.Code()
+				"message": "身份认证过期，请重新登录:" + err.Error(),
+				"data":    []interface{}{},
+			})
+			return
+		}
+
+		group.Middleware(middlewareAuth.Auth)
 		// 获取登录扩展属性
 		group.ALL("/system/data", func(r *ghttp.Request) {
 			// 获取登陆信息
@@ -93,7 +105,7 @@ func InitRouter(s *ghttp.Server) {
 			r.ExitAll()
 		}
 		// 认证成功调用Generate生成Token
-		token, err := gToken.Generate(ctx, username, "1")
+		token, err := gToken.Generate(ctx, username, g.Map{"username": username})
 		if err != nil {
 			r.Response.WriteJson(RespError(err))
 			r.ExitAll()

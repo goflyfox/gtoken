@@ -2,6 +2,7 @@ package gtoken_test
 
 import (
 	"github.com/goflyfox/gtoken/v2/gtoken"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/stretchr/testify/assert"
@@ -69,7 +70,7 @@ func TestDestroy(t *testing.T) {
 	// 销毁成功
 	{
 		gToken := gtoken.NewDefaultToken(gtoken.Options{})
-		token, err := gToken.Generate(ctx, userKey, "1")
+		token, err := gToken.Generate(ctx, userKey, nil)
 		assert.NoError(t, err)
 		u, err := gToken.Validate(ctx, token)
 		assert.NoError(t, err)
@@ -89,7 +90,7 @@ func TestGet(t *testing.T) {
 	userKey := "testUser"
 	{
 		gToken := gtoken.NewDefaultToken(gtoken.Options{})
-		data := "1"
+		data := g.Map{"a": "1"}
 		token, err := gToken.Generate(ctx, userKey, data)
 		assert.NoError(t, err)
 		u, err := gToken.Validate(ctx, token)

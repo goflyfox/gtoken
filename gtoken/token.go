@@ -48,6 +48,7 @@ func NewDefaultToken(options Options) Token {
 	if options.TokenDelimiter == "" {
 		options.TokenDelimiter = DefaultTokenDelimiter
 	}
+
 	gfToken := &GTokenV2{
 		Options: options,
 		Codec:   NewDefaultCodec(options.TokenDelimiter, options.EncryptKey),
@@ -77,6 +78,7 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 		err = gerror.WrapCode(gcode.CodeInternalError, err)
 		return
 	}
+
 	userCache := g.Map{
 		KeyUserKey:    userKey,
 		KeyToken:      token,
@@ -163,6 +165,7 @@ func (m *GTokenV2) Destroy(ctx context.Context, userKey string) error {
 	return nil
 }
 
+// GetOptions 获取Options配置
 func (m *GTokenV2) GetOptions() Options {
 	return m.Options
 }

@@ -88,16 +88,17 @@ MaxRefresh int
 
 具体可参考`GfToken`结构体，字段解释如下：
 
-| 名称             | 配置字段       | 说明                                   |
-| ---------------- | -------------- | -------------------------------------- |
-| 缓存模式         | CacheMode      | 1 gcache 2 gredis 3 fileCache 默认1    |
-| 缓存key          | CachePreKey    | 默认缓存前缀`GToken:`                  |
-| 超时时间         | Timeout        | 默认10天（毫秒）                       |
-| 缓存刷新时间     | MaxRefresh     | 默认为超时时间的一半（毫秒）           |
-| Token分隔符      | TokenDelimiter | 默认`_`                                |
-| Token加密key     | EncryptKey     | 默认`12345678912345678912345678912345` |
-| 是否支持多端登录 | MultiLogin     | 默认false                              |
-| 拦截排除地址     | excludePaths   | 此路径列表不进行认证                   |
+| 名称         | 配置字段       | 说明                                   |
+|------------| -------------- |--------------------------------------|
+| 缓存模式       | CacheMode      | 1 gcache 2 gredis 3 fileCache 默认1    |
+| 缓存key      | CachePreKey    | 默认缓存前缀`GToken:`                      |
+| 超时时间       | Timeout        | 默认10天（毫秒）                            |
+| 缓存刷新时间     | MaxRefresh     | 默认为超时时间的一半（毫秒）                       |
+| Token分隔符   | TokenDelimiter | 默认`_`                                |
+| Token加密key | EncryptKey     | 默认`12345678912345678912345678912345` |
+| 是否支持多端登录   | MultiLogin     | 默认false                              |
+| 拦截排除地址     | AuthExcludePaths   | 拦截器参数：此路径列表不进行认证                     |
+| 拦截返回函数     | ResFun   | 拦截器参数：认证失败返回函数，默认返回Code：300          |
 
 ## 示例
 
