@@ -7,6 +7,7 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestGenerate(t *testing.T) {
@@ -101,11 +102,6 @@ func TestGet(t *testing.T) {
 		assert.Equal(t, data, data2)
 
 	}
-}
-
-func TestGetByToken(t *testing.T) {
-	ctx := gctx.New()
-	userKey := "testUser"
 	{
 		gToken := gtoken.NewDefaultToken(gtoken.Options{})
 		data := g.Map{"a": "1"}
@@ -118,6 +114,63 @@ func TestGetByToken(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, userKey, userKey2)
 		assert.Equal(t, data, data2)
+
+	}
+}
+
+func TestTimeOut(t *testing.T) {
+	var (
+		ctx     = gctx.New()
+		userKey = "testUser"
+		data    = g.Map{"a": "1"}
+	)
+	// token超时
+	{
+		gToken := gtoken.NewDefaultToken(gtoken.Options{
+			Timeout:    1000,
+			MaxRefresh: 500,
+		})
+		token, err := gToken.Generate(ctx, userKey, data)
+		assert.NoError(t, err)
+		_, err = gToken.Validate(ctx, token)
+		assert.NoError(t, err)
+		time.Sleep(2 * time.Second)
+		// 超时
+		_, err = gToken.Validate(ctx, token)
+		assert.Error(t, err)
+
+	}
+}
+
+func TestRefresh(t *testing.T) {
+	var (
+		ctx     = gctx.New()
+		userKey = "testUser"
+		data    = g.Map{"a": "1"}
+	)
+	// 超过刷新次数
+	{
+		gToken := gtoken.NewDefaultToken(gtoken.Options{
+			Timeout:         1000,
+			MaxRefresh:      500,
+			MaxRefreshTimes: 1,
+		})
+		token, err := gToken.Generate(ctx, userKey, data)
+		assert.NoError(t, err)
+		_, err = gToken.Validate(ctx, token)
+		assert.NoError(t, err)
+		time.Sleep(600 * time.Millisecond)
+		// 第一次刷新
+		_, err = gToken.Validate(ctx, token)
+		assert.NoError(t, err)
+		time.Sleep(600 * time.Millisecond)
+		// 不再刷新，但未超时
+		_, err = gToken.Validate(ctx, token)
+		assert.NoError(t, err)
+		// 不再刷新，超过1s超时
+		time.Sleep(600 * time.Millisecond)
+		_, err = gToken.Validate(ctx, token)
+		assert.Error(t, err)
 
 	}
 }

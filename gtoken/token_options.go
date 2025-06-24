@@ -13,6 +13,8 @@ type Options struct {
 	Timeout int64
 	// 缓存刷新时间 默认为超时时间的一半（毫秒）
 	MaxRefresh int64
+	// 最大刷新次数 默认0 不限制
+	MaxRefreshTimes int
 	// Token分隔符
 	TokenDelimiter string
 	// Token加密key

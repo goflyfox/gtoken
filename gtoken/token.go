@@ -85,6 +85,7 @@ func (m *GTokenV2) Generate(ctx context.Context, userKey string, data any) (toke
 		KeyUserKey:    userKey,
 		KeyToken:      token,
 		KeyData:       data,
+		KeyRefreshNum: 0,
 		KeyCreateTime: gtime.Now().TimestampMilli(),
 	}
 
@@ -123,16 +124,28 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 	}
 
 	// 需要进行缓存超时时间刷新
-	nowTime := gtime.Now().TimestampMilli()
-	createTime := userCache[KeyCreateTime]
-	if m.Options.MaxRefresh > 0 && nowTime > gconv.Int64(createTime)+m.Options.MaxRefresh {
-		userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
-		err = m.Cache.Set(ctx, userKey, userCache)
-		if err != nil {
-			err = gerror.WrapCode(gcode.CodeInternalError, err)
+	refreshToken := func() {
+		nowTime := gtime.Now().TimestampMilli()
+		createTime := userCache[KeyCreateTime]
+		refreshNum := gconv.Int(userCache[KeyRefreshNum])
+		if m.Options.MaxRefresh == 0 {
 			return
 		}
+		if m.Options.MaxRefreshTimes > 0 && refreshNum >= m.Options.MaxRefreshTimes {
+			return
+		}
+		if nowTime > gconv.Int64(createTime)+m.Options.MaxRefresh {
+			g.Log().Info(ctx, "refresh token", userKey, refreshNum)
+			userCache[KeyRefreshNum] = refreshNum + 1
+			userCache[KeyCreateTime] = gtime.Now().TimestampMilli()
+			err = m.Cache.Set(ctx, userKey, userCache)
+			if err != nil {
+				err = gerror.WrapCode(gcode.CodeInternalError, err)
+				return
+			}
+		}
 	}
+	refreshToken()
 
 	return
 }

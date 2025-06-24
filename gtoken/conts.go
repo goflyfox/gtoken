@@ -11,10 +11,11 @@ const (
 	DefaultTokenDelimiter = "_"
 	DefaultEncryptKey     = "12345678912345678912345678912345"
 
-	KeyUserKey    = "userKey"
-	KeyCreateTime = "createTime"
-	KeyData       = "data"
-	KeyToken      = "token"
+	KeyUserKey    = "userKey"    // 用户标识
+	KeyCreateTime = "createTime" // 创建时间
+	KeyRefreshNum = "refreshNum" // 刷新次数
+	KeyData       = "data"       // 缓存自定义数据
+	KeyToken      = "token"      // token
 )
 
 const (
