@@ -13,17 +13,23 @@ import (
 
 type Middleware struct {
 	Token Token
+	// 自定义Token校验失败返回方法
+	ResFun func(r *ghttp.Request, err error)
 	// 拦截排除地址
 	AuthExcludePaths g.SliceStr
-	// 错误码，默认： gcode.CodeBusinessValidationFailed
-	ErrCode int
 }
 
 func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 	return Middleware{
-		Token:            token,
+		Token: token,
+		ResFun: func(r *ghttp.Request, err error) {
+			r.Response.WriteJson(ghttp.DefaultHandlerResponse{
+				Code:    gcode.CodeBusinessValidationFailed.Code(), // 错误码
+				Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
+				Data:    gerror.Code(err).Detail(),
+			})
+		},
 		AuthExcludePaths: excludePaths,
-		ErrCode:          gcode.CodeBusinessValidationFailed.Code(),
 	}
 }
 
@@ -40,21 +46,13 @@ func (m Middleware) Auth(r *ghttp.Request) {
 	// 获取请求token
 	token, err := GetRequestToken(r)
 	if err != nil {
-		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
-			Code:    m.ErrCode,
-			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
-			Data:    gerror.Code(err).Detail(),
-		})
+		m.ResFun(r, err)
 		return
 	}
 
 	userKey, err := m.Token.Validate(r.Context(), token)
 	if err != nil {
-		r.Response.WriteJson(ghttp.DefaultHandlerResponse{
-			Code:    m.ErrCode,
-			Message: gconv.String(gerror.Code(err).Code()) + ":" + gerror.Code(err).Message() + ":" + err.Error(),
-			Data:    gerror.Code(err).Detail(),
-		})
+		m.ResFun(r, err)
 		return
 	}
 	r.SetCtxVar(KeyUserKey, userKey)

@@ -8,6 +8,7 @@ gToken:
   CacheMode: 3
   # 是否支持多端登录
   MultiLogin: true
+  # Token加密key
   EncryptKey: "koi29a83idakguqjq29asd9asd8a7jhq"
 
 # Redis 配置
