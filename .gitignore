@@ -16,3 +16,4 @@ logs
 vendor
 go.sum
 example/go.sum
+todo.md

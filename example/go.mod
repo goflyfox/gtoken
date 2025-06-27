@@ -3,7 +3,7 @@ module gtoken-demo
 go 1.24
 
 require (
-	github.com/goflyfox/gtoken/v2 v2.0.0-alpha
+	github.com/goflyfox/gtoken/v2 v2.0.2
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.9.0
 	github.com/gogf/gf/v2 v2.9.0
 )
