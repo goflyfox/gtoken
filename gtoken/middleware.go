@@ -16,11 +16,9 @@ type Middleware struct {
 	Token Token
 	// 自定义Token校验失败返回方法
 	ResFun func(r *ghttp.Request, err error)
-	// 拦截排除地址
-	AuthExcludePaths g.SliceStr
 }
 
-func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
+func NewDefaultMiddleware(token Token) Middleware {
 	return Middleware{
 		Token: token,
 		ResFun: func(r *ghttp.Request, err error) {
@@ -30,7 +28,6 @@ func NewDefaultMiddleware(token Token, excludePaths ...string) Middleware {
 				Data:    gerror.Code(err).Detail(),
 			})
 		},
-		AuthExcludePaths: excludePaths,
 	}
 }
 
@@ -64,7 +61,7 @@ func (m Middleware) Auth(r *ghttp.Request) {
 func (m Middleware) HasExcludePath(r *ghttp.Request) bool {
 	var (
 		urlPath      = r.URL.Path
-		excludePaths = m.AuthExcludePaths
+		excludePaths = m.Token.GetOptions().AuthExcludePaths
 	)
 	if len(excludePaths) == 0 {
 		return false

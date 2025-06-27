@@ -5,11 +5,12 @@ server:
 
 gToken:
   # 缓存模式 1 gcache 2 gredis 3 gfile
-  CacheMode: 2
+  CacheMode: 3
   # 是否支持多端登录
   MultiLogin: true
   # Token加密key
   EncryptKey: "koi29a83idakguqjq29asd9asd8a7jhq"
+  AuthExcludePaths: ["/user/info", "/system/user/info"]
 
 # Redis 配置
 redis:

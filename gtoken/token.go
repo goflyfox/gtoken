@@ -18,8 +18,8 @@ type Token interface {
 	Validate(ctx context.Context, token string) (userKey string, err error)
 	// Get 通过userKey获取token,Data
 	Get(ctx context.Context, userKey string) (token string, data any, err error)
-	// GetByToken 通过token获取userKey,data
-	GetByToken(ctx context.Context, token string) (userKey string, data any, err error)
+	// ParseToken 通过token获取userKey,data
+	ParseToken(ctx context.Context, token string) (userKey string, data any, err error)
 	// Destroy 销毁 Token
 	Destroy(ctx context.Context, userKey string) error
 	// GetOptions 获取配置参数
@@ -31,6 +31,16 @@ type GTokenV2 struct {
 	Options Options
 	Codec   Codec
 	Cache   Cache
+}
+
+func NewDefaultTokenByConfig() Token {
+	var options *Options
+	ctx := gctx.New()
+	err := g.Cfg().MustGet(ctx, "gToken").Struct(&options)
+	if err != nil {
+		panic("options init fail")
+	}
+	return NewDefaultToken(*options)
 }
 
 func NewDefaultToken(options Options) Token {
@@ -166,8 +176,8 @@ func (m *GTokenV2) Get(ctx context.Context, userKey string) (token string, data 
 	return gconv.String(userCache[KeyToken]), userCache[KeyData], nil
 }
 
-// GetByToken 通过token获取userKey,data
-func (m *GTokenV2) GetByToken(ctx context.Context, token string) (userKey string, data any, err error) {
+// ParseToken 通过token获取userKey,data
+func (m *GTokenV2) ParseToken(ctx context.Context, token string) (userKey string, data any, err error) {
 	if token == "" {
 		err = gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
 		return

@@ -39,14 +39,8 @@ var gToken gtoken.Token
 */
 func InitRouter(s *ghttp.Server) {
 	ctx := gctx.New()
-
-	options := &gtoken.Options{}
-	err := g.Cfg().MustGet(ctx, "gToken").Struct(options)
-	if err != nil {
-		panic("options init fail")
-	}
 	// 创建gtoken对象
-	gToken = gtoken.NewDefaultToken(*options)
+	gToken = gtoken.NewDefaultTokenByConfig()
 
 	// 调试路由
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -59,7 +53,7 @@ func InitRouter(s *ghttp.Server) {
 		group.Middleware(CORS)
 		// 注册gToken中间件
 
-		middlewareAuth := gtoken.NewDefaultMiddleware(gToken, "/user/info", "/system/user/info")
+		middlewareAuth := gtoken.NewDefaultMiddleware(gToken)
 		// token校验失败后的返回方法
 		middlewareAuth.ResFun = func(r *ghttp.Request, err error) {
 			r.Response.WriteJson(g.Map{
@@ -84,7 +78,7 @@ func InitRouter(s *ghttp.Server) {
 		group.ALL("/system/data2", func(r *ghttp.Request) {
 			// 获取登陆信息
 			token, _ := gtoken.GetRequestToken(r)
-			_, data, err := gToken.GetByToken(r.Context(), token)
+			_, data, err := gToken.ParseToken(r.Context(), token)
 			if err != nil {
 				r.Response.WriteJson(RespError(err))
 			}

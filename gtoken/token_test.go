@@ -110,7 +110,7 @@ func TestGet(t *testing.T) {
 		u, err := gToken.Validate(ctx, token)
 		assert.NoError(t, err)
 		assert.Equal(t, userKey, u)
-		userKey2, data2, err := gToken.GetByToken(ctx, token)
+		userKey2, data2, err := gToken.ParseToken(ctx, token)
 		assert.NoError(t, err)
 		assert.Equal(t, userKey, userKey2)
 		assert.Equal(t, data, data2)

@@ -106,8 +106,8 @@ func (m *JwtToken) Get(ctx context.Context, userKey string) (token string, data 
 	panic("get method does not support!")
 }
 
-// GetByToken 通过token获取userKey
-func (m *JwtToken) GetByToken(ctx context.Context, token string) (userKey string, data any, err error) {
+// ParseToken 通过token获取userKey
+func (m *JwtToken) ParseToken(ctx context.Context, token string) (userKey string, data any, err error) {
 	if token == "" {
 		err = gerror.NewCode(gcode.CodeMissingParameter, gtoken.MsgErrTokenEmpty)
 		return
