@@ -40,6 +40,9 @@ func NewDefaultTokenByConfig() Token {
 	if err != nil {
 		panic("options init fail")
 	}
+	if options == nil {
+		panic("options config not configured")
+	}
 	return NewDefaultToken(*options)
 }
 
