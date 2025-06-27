@@ -1,8 +1,8 @@
 package gtoken_jwt_test
 
 import (
+	"github.com/goflyfox/gtoken-jwt/v2"
 	"github.com/goflyfox/gtoken/v2/gtoken"
-	"github.com/goflyfox/gtoken/v2/gtoken/jwt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"

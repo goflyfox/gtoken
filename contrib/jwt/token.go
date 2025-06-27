@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const (
+	DefaultShortTimeout = 5 * 1000
+)
+
 // JwtToken jwt结构体
 type JwtToken struct {
 	Options gtoken.Options
@@ -31,7 +35,7 @@ type JwtData struct {
 // 说明：此token不支持刷新，不支持多端登录，仅适用于短期或者一次性token的使用场景
 func New(options gtoken.Options) gtoken.Token {
 	if options.Timeout == 0 {
-		options.Timeout = gtoken.DefaultShortTimeout
+		options.Timeout = DefaultShortTimeout
 	}
 	if len(options.EncryptKey) == 0 {
 		options.EncryptKey = []byte(gtoken.DefaultEncryptKey)
