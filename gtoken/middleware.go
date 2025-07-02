@@ -98,7 +98,11 @@ func (m Middleware) HasExcludePath(r *ghttp.Request) bool {
 
 // GetUserKey 返回请求
 func GetUserKey(ctx context.Context) string {
-	return g.RequestFromCtx(ctx).GetCtxVar(KeyUserKey).String()
+	userKey := g.RequestFromCtx(ctx).GetCtxVar(KeyUserKey)
+	if userKey.IsNil() {
+		return ""
+	}
+	return userKey.String()
 }
 
 // GetRequestToken 返回请求Token
