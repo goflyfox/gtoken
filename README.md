@@ -104,6 +104,11 @@ MaxRefresh int
 
 使用示例，请先参考`gtoken/example/sample/test/backend/server.go`文件
 
+## 项目扩展
+
+1. gtoken-jwt：基于gtoken的jwt扩展，适用于短期token场景使用；[具体文档](contrib/jwt/ReadMe.md)
+
+
 ## 感谢
 
 1. gf框架 [https://github.com/gogf/gf](https://github.com/gogf/gf) 

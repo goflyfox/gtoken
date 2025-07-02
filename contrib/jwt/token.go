@@ -31,6 +31,19 @@ type JwtData struct {
 	Now     int64  // 通过时间戳保证每次生成不一致
 }
 
+func NewByConfig() gtoken.Token {
+	var options *gtoken.Options
+	ctx := gctx.New()
+	err := g.Cfg().MustGet(ctx, "gToken").Struct(&options)
+	if err != nil {
+		panic("options init fail")
+	}
+	if options == nil {
+		panic("options config not configured")
+	}
+	return New(*options)
+}
+
 // New
 // 说明：此token不支持刷新，不支持多端登录，仅适用于短期或者一次性token的使用场景
 func New(options gtoken.Options) gtoken.Token {
