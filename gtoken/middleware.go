@@ -2,13 +2,14 @@ package gtoken
 
 import (
 	"context"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"strings"
 )
 
 type Middleware struct {
@@ -34,7 +35,7 @@ func NewDefaultMiddleware(token Token) Middleware {
 // Auth 认证拦截
 // 认证失败统一错误码：gcode.CodeBusinessValidationFailed
 func (m Middleware) Auth(r *ghttp.Request) {
-	if m.HasExcludePath(r) {
+	if m.HasExcludePath(r) || !m.NeedAuthFromTag(r) {
 		// 如果不需要认证，继续
 		r.Middleware.Next()
 		return
@@ -94,6 +95,16 @@ func (m Middleware) HasExcludePath(r *ghttp.Request) bool {
 	}
 
 	return false
+}
+
+func (m Middleware) NeedAuthFromTag(r *ghttp.Request) bool {
+	handler := r.GetServeHandler()
+	if handler == nil {
+		return false
+	}
+	meta := handler.GetMetaTag("auth")
+
+	return gconv.Bool(meta)
 }
 
 // GetUserKey 返回请求
