@@ -16,8 +16,8 @@ type Token interface {
 	Generate(ctx context.Context, userKey string, data any) (token string, err error)
 	// Validate 验证 Token
 	Validate(ctx context.Context, token string) (userKey string, err error)
-	// UpdateData 通过userKey更新Data，需求：服务端主动对认证用户修改后，希望在不改变token的情况下，同步用户信息
-	UpdateData(ctx context.Context, token string, data any) (err error)
+	// UpdateData 通过userKey更新Data
+	UpdateData(ctx context.Context, userKey string, data any) (err error)
 	// Get 通过userKey获取token,Data
 	Get(ctx context.Context, userKey string) (token string, data any, err error)
 	// ParseToken 通过token获取userKey,data
@@ -164,7 +164,7 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 	return
 }
 
-// UpdateData 通过userKey更新Data，需求：服务端主动对认证用户修改后，希望在不改变token的情况下，同步用户信息
+// UpdateData 通过userKey更新Data
 func (m *GTokenV2) UpdateData(ctx context.Context, userKey string, data any) (err error) {
 	if userKey == "" {
 		return gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
