@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -62,6 +63,48 @@ func TestValidate(t *testing.T) {
 		glog.Info(ctx, u, err)
 		assert.Error(t, err)
 		assert.Empty(t, u)
+	}
+}
+
+func TestUpdateData(t *testing.T) {
+	ctx := gctx.New()
+	userKey := "testUser"
+	nicknameKey := "nickname"
+	nicknameValue := "gToken"
+	expiryKey := "expiry_time"
+	expiryValue1 := int64(1000)
+	expiryValue2 := int64(2000)
+	// 更新Data
+	{
+		gToken := gtoken.NewDefaultToken(gtoken.Options{})
+		token, err := gToken.Generate(ctx, userKey, g.Map{
+			nicknameKey: nicknameValue,
+			expiryKey:   expiryValue1,
+		})
+		assert.NoError(t, err)
+		//验证
+		userKey1, data1, err := gToken.ParseToken(ctx, token)
+		assert.NoError(t, err)
+		assert.Equal(t, userKey, userKey1)
+		newData1 := gconv.Map(data1)
+		assert.Equal(t, gconv.Int64(newData1[expiryKey]), expiryValue1)
+		assert.Equal(t, gconv.String(newData1[nicknameKey]), nicknameValue)
+
+		//更新Data--改变过期时间
+		err = gToken.UpdateData(ctx, userKey, g.Map{
+			nicknameKey: nicknameValue,
+			expiryKey:   expiryValue2,
+		})
+		assert.NoError(t, err)
+
+		//验证更新后的Data值
+		userKey2, data2, err := gToken.ParseToken(ctx, token)
+		assert.NoError(t, err)
+		assert.Equal(t, userKey, userKey2)
+		newData2 := gconv.Map(data2)
+		assert.Equal(t, gconv.Int64(newData2[expiryKey]), expiryValue2)
+		assert.Equal(t, gconv.String(newData2[nicknameKey]), nicknameValue)
+
 	}
 }
 

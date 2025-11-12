@@ -16,6 +16,8 @@ type Token interface {
 	Generate(ctx context.Context, userKey string, data any) (token string, err error)
 	// Validate 验证 Token
 	Validate(ctx context.Context, token string) (userKey string, err error)
+	// UpdateData 通过userKey更新Data
+	UpdateData(ctx context.Context, userKey string, data any) (err error)
 	// Get 通过userKey获取token,Data
 	Get(ctx context.Context, userKey string) (token string, data any, err error)
 	// ParseToken 通过token获取userKey,data
@@ -160,6 +162,24 @@ func (m *GTokenV2) Validate(ctx context.Context, token string) (userKey string, 
 	refreshToken()
 
 	return
+}
+
+// UpdateData 通过userKey更新Data
+func (m *GTokenV2) UpdateData(ctx context.Context, userKey string, data any) (err error) {
+	if userKey == "" {
+		return gerror.NewCode(gcode.CodeMissingParameter, MsgErrUserKeyEmpty)
+	}
+	userCache, err := m.Cache.Get(ctx, userKey)
+	if err != nil || userCache == nil {
+		return nil
+	}
+	userCache[KeyData] = data
+	err = m.Cache.Set(ctx, userKey, userCache)
+	if err != nil {
+		err = gerror.WrapCode(gcode.CodeInternalError, err)
+		return
+	}
+	return nil
 }
 
 // Get 通过userKey获取Token
