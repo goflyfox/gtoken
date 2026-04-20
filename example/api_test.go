@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gtoken-demo/backend"
+	"net/http"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
-	"gtoken-demo/backend"
-	"os"
-	"testing"
 )
 
 const (
@@ -24,6 +27,18 @@ var (
 func setup() {
 	fmt.Println("start...")
 	backend.Start()
+
+	// 等待服务器真正就绪
+	for i := 0; i < 30; i++ {
+		resp, err := http.Get(TestURL + "/hello")
+		if err == nil && resp.StatusCode == http.StatusOK {
+			resp.Body.Close()
+			fmt.Println("Server is ready")
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	panic("Server failed to start within 3 seconds")
 }
 
 func teardown() {
