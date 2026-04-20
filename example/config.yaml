@@ -10,7 +10,10 @@ gToken:
   MultiLogin: true
   # Token加密key
   EncryptKey: "koi29a83idakguqjq29asd9asd8a7jhq"
-  AuthExcludePaths: ["/user/info", "/system/user/info"]
+  AuthExcludePaths:
+    - /user/info
+    - /system/user/info
+    - /hello
 
 # Redis 配置
 redis:

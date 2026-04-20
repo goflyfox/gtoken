@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+
 	"github.com/goflyfox/gtoken/v2/gtoken"
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -42,13 +43,6 @@ func InitRouter(s *ghttp.Server) {
 	// 创建gtoken对象
 	gToken = gtoken.NewDefaultTokenByConfig()
 
-	// 调试路由
-	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.ALL("/hello", func(r *ghttp.Request) {
-			r.Response.WriteJson(RespSuccess("hello"))
-		})
-	})
-
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(CORS)
 		// 注册gToken中间件
@@ -65,6 +59,11 @@ func InitRouter(s *ghttp.Server) {
 		}
 
 		group.Middleware(middlewareAuth.Auth)
+		// 调试路由
+		group.ALL("/hello", func(r *ghttp.Request) {
+			r.Response.WriteJson(RespSuccess("hello"))
+		})
+
 		// 获取登录扩展属性
 		group.ALL("/system/data", func(r *ghttp.Request) {
 			// 获取登陆信息

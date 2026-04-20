@@ -1,5 +1,8 @@
 GET {{host}}/system/user
 
+### hello
+GET {{host}}/hello
+
 ### 登陆
 GET {{host}}/login?username=a&passwd=2
 
@@ -15,8 +18,13 @@ GET {{host}}/login?username=a&passwd=2
 ###
 GET {{host}}/system/user?token={{token}}
 
+###
+POST {{host}}/system/data?token={{token}}
+
 ### 登出
 GET {{host}}/user/logout?token={{token}}
+
+
 
 ###
 GET {{host}}/user/info

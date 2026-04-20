@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"gtoken-demo/backend"
+	"io"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
@@ -32,8 +32,9 @@ func setup() {
 	for i := 0; i < 30; i++ {
 		resp, err := http.Get(TestURL + "/hello")
 		if err == nil && resp.StatusCode == http.StatusOK {
-			resp.Body.Close()
-			fmt.Println("Server is ready")
+			defer resp.Body.Close()
+			body, _ := io.ReadAll(resp.Body)
+			fmt.Println("Server is ready! Response:", string(body))
 			return
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -46,13 +47,6 @@ func teardown() {
 	fmt.Println("stop.")
 }
 
-func TestMain(m *testing.M) {
-	setup()
-	code := m.Run()
-	teardown()
-	os.Exit(code)
-}
-
 func TestHello(t *testing.T) {
 	ctx := context.TODO()
 
@@ -62,7 +56,7 @@ func TestHello(t *testing.T) {
 	} else {
 		defer r.Close()
 
-		content := string(r.ReadAll())
+		content := r.ReadAllString()
 		t.Log(content)
 
 		var respData backend.Resp
@@ -82,6 +76,7 @@ func TestUserData(t *testing.T) {
 		t.Log("1. execute login and visit user")
 		resp := Post(t, "/system/data", "username="+Username)
 		if resp.Code == gcode.CodeOK.Code() {
+			t.Log("resp:", resp.Data)
 			dataMap := gconv.Map(resp.Data)
 			if dataMap["username"] == Username {
 				t.Log("get user data success", resp)
@@ -97,6 +92,7 @@ func TestUserData(t *testing.T) {
 		t.Log("1. execute login and visit user")
 		resp := Post(t, "/system/data2", "username="+Username)
 		if resp.Code == gcode.CodeOK.Code() {
+			t.Log("resp:", resp.Data)
 			dataMap := gconv.Map(resp.Data)
 			if dataMap["username"] == Username {
 				t.Log("get user data success", resp)
