@@ -7,6 +7,7 @@ import (
 	"gtoken-demo/backend"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -45,6 +46,13 @@ func setup() {
 func teardown() {
 	backend.Stop()
 	fmt.Println("stop.")
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	code := m.Run()
+	teardown()
+	os.Exit(code)
 }
 
 func TestHello(t *testing.T) {
