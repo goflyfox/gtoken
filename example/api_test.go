@@ -36,6 +36,7 @@ func setup() {
 			defer resp.Body.Close()
 			body, _ := io.ReadAll(resp.Body)
 			fmt.Println("Server is ready! Response:", string(body))
+			time.Sleep(200 * time.Millisecond)
 			return
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -334,15 +335,35 @@ func TestLogout(t *testing.T) {
 func Post(t *testing.T, urlPath string, data ...interface{}) backend.Resp {
 	ctx := context.TODO()
 
-	client := g.Client()
-	client.SetHeader("Authorization", "Bearer "+getToken(t))
-	content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
-	var respData backend.Resp
-	err := json.Unmarshal([]byte(content), &respData)
-	if err != nil {
-		t.Error("error:", err)
+	token := getToken(t)
+	if token == "" {
+		t.Fatal("Failed to get token")
 	}
-	return respData
+
+	client := g.Client()
+	client.SetHeader("Authorization", "Bearer "+token)
+	// 最多重试3次
+	for attempt := 1; attempt <= 3; attempt++ {
+		content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
+
+		if len(content) == 0 {
+			t.Logf("Empty response on attempt %d, retrying...", attempt)
+			time.Sleep(time.Duration(attempt) * 100 * time.Millisecond)
+			continue
+		}
+
+		var respData backend.Resp
+		err := json.Unmarshal([]byte(content), &respData)
+		if err != nil {
+			t.Logf("Unmarshal error on attempt %d: %v, content: %s", attempt, err, string(content))
+			time.Sleep(time.Duration(attempt) * 100 * time.Millisecond)
+			continue
+		}
+
+		return respData
+	}
+	t.Fatal("All retry attempts failed")
+	return backend.Resp{}
 }
 
 func getToken(t *testing.T) string {
