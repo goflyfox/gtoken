@@ -1,24 +1,26 @@
 package gtoken_jwt_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/goflyfox/gtoken-jwt/v2"
 	"github.com/goflyfox/gtoken/v2/gtoken"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestGenerate(t *testing.T) {
 	ctx := gctx.New()
-	userKey := "testUser"
+	userKey := "testUser1"
 	// 非多端登陆，每次生成新Token
 	{
 		gToken := gtoken_jwt.New(gtoken.Options{})
 		token1, err := gToken.Generate(ctx, userKey, nil)
 		assert.NoError(t, err)
+		time.Sleep(100 * time.Millisecond)
 		token2, err := gToken.Generate(ctx, userKey, nil)
 		assert.NoError(t, err)
 		assert.NotEqual(t, token1, token2)
@@ -27,7 +29,7 @@ func TestGenerate(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	ctx := gctx.New()
-	userKey := "testUser"
+	userKey := "testUser2"
 	// 登陆成功
 	{
 		gToken := gtoken_jwt.New(gtoken.Options{})
@@ -57,7 +59,7 @@ func TestValidate(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	ctx := gctx.New()
-	userKey := "testUser"
+	userKey := "testUser3"
 	{
 		gToken := gtoken_jwt.New(gtoken.Options{})
 		data := g.Map{"a": "1"}
@@ -77,7 +79,7 @@ func TestGet(t *testing.T) {
 func TestTimeOut(t *testing.T) {
 	var (
 		ctx     = gctx.New()
-		userKey = "testUser"
+		userKey = "testUser4"
 		data    = g.Map{"a": "1"}
 	)
 	// token超时
