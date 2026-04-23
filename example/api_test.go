@@ -60,22 +60,16 @@ func TestHello(t *testing.T) {
 	ctx := context.TODO()
 
 	t.Log("visit hello and no auth")
-	if r, e := g.Client().Post(ctx, TestURL+"/hello", "username="+Username); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
+	content := g.Client().PostContent(ctx, TestURL+"/hello", "username="+Username)
+	t.Log(content)
 
-		content := r.ReadAllString()
-		t.Log(content)
-
-		var respData backend.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-		if respData.Code != gcode.CodeOK.Code() {
-			t.Error("error:", respData)
-		}
+	var respData backend.Resp
+	err := json.Unmarshal([]byte(content), &respData)
+	if err != nil {
+		t.Error("error:", err)
+	}
+	if respData.Code != gcode.CodeOK.Code() {
+		t.Error("error:", respData)
 	}
 }
 
@@ -342,28 +336,21 @@ func Post(t *testing.T, urlPath string, data ...interface{}) backend.Resp {
 
 	client := g.Client()
 	client.SetHeader("Authorization", "Bearer "+token)
-	// 最多重试3次
-	for attempt := 1; attempt <= 3; attempt++ {
-		content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
+	client.SetRetry(3, 200*time.Millisecond)
 
-		if len(content) == 0 {
-			t.Logf("Empty response on attempt %d, retrying...", attempt)
-			time.Sleep(time.Duration(attempt) * 100 * time.Millisecond)
-			continue
-		}
+	content := client.RequestContent(ctx, "POST", TestURL+urlPath, data...)
 
-		var respData backend.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Logf("Unmarshal error on attempt %d: %v, content: %s", attempt, err, string(content))
-			time.Sleep(time.Duration(attempt) * 100 * time.Millisecond)
-			continue
-		}
-
-		return respData
+	if len(content) == 0 {
+		t.Fatal("content empty!", urlPath)
 	}
-	t.Fatal("All retry attempts failed")
-	return backend.Resp{}
+
+	var respData backend.Resp
+	err := json.Unmarshal([]byte(content), &respData)
+	if err != nil {
+		t.Fatal("Unmarshal error!", err)
+	}
+
+	return respData
 }
 
 func getToken(t *testing.T) string {
@@ -373,24 +360,19 @@ func getToken(t *testing.T) string {
 		return Token[Username]
 	}
 
-	if r, e := g.Client().Post(ctx, TestURL+"/login", "username="+Username+"&passwd=123456"); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
+	content := g.Client().PostContent(ctx, TestURL+"/login", "username="+Username+"&passwd=123456")
 
-		content := string(r.ReadAll())
-
-		var respData backend.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-
-		if respData.Code != gcode.CodeOK.Code() {
-			t.Error("error:", "resp fail:", respData)
-		}
-
-		Token[Username] = gconv.String(gconv.Map(respData.Data)["token"])
+	var respData backend.Resp
+	err := json.Unmarshal([]byte(content), &respData)
+	if err != nil {
+		t.Error("error:", err)
 	}
+
+	if respData.Code != gcode.CodeOK.Code() {
+		t.Error("error:", "resp fail:", respData)
+	}
+
+	Token[Username] = gconv.String(gconv.Map(respData.Data)["token"])
+
 	return Token[Username]
 }
