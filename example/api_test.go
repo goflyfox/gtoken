@@ -124,22 +124,16 @@ func TestSystemUser(t *testing.T) {
 	ctx := context.TODO()
 	// 未登录
 	t.Log("1. not login and visit user")
-	if r, e := g.Client().Post(ctx, TestURL+"/system/user", "username="+Username); e != nil {
-		t.Error("error:", e)
-	} else {
-		defer r.Close()
+	content := g.Client().PostContent(ctx, TestURL+"/system/user", "username="+Username)
+	t.Log(content)
 
-		content := string(r.ReadAll())
-		t.Log(content)
-
-		var respData backend.Resp
-		err := json.Unmarshal([]byte(content), &respData)
-		if err != nil {
-			t.Error("error:", err)
-		}
-		if respData.Code == gcode.CodeOK.Code() {
-			t.Error("error:", respData)
-		}
+	var respData backend.Resp
+	err := json.Unmarshal([]byte(content), &respData)
+	if err != nil {
+		t.Error("error:", err)
+	}
+	if respData.Code == gcode.CodeOK.Code() {
+		t.Error("error:", respData)
 	}
 
 	// 登录，访问用户信息
